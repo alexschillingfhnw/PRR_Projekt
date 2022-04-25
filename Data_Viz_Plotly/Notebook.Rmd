@@ -1,0 +1,18 @@
+---
+title: "Data Visualierung mit Plotly"
+output: html_notebook
+---
+
+Bibliotheken importieren
+
+```{r}
+library(plotly)
+```
+
+Daten laden
+
+```{r}
+data <- read.csv(file = "2018-2019.csv")
+head(data)
+```
+
