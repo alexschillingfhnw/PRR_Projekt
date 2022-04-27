@@ -1,0 +1,27 @@
+{
+    "id": "41450CF9",
+    "path": "~/GitHub/PRR_Projekt/Data_Viz_Plotly/Notebook.Rmd",
+    "project_path": "Notebook.Rmd",
+    "type": "r_markdown",
+    "hash": "2398839983",
+    "contents": "",
+    "dirty": false,
+    "created": 1650958969989.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "chunk_output_type": "inline",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "28,3",
+        "scrollLine": "7"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1651051649,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1651051649368,
+    "read_only": false,
+    "read_only_alternatives": []
+}
