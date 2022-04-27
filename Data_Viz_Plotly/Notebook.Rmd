@@ -3,27 +3,28 @@ title: "Dataviz mit Plotly"
 output: html_notebook
 ---
 
-## Welchen Einfluss hat der Heimvorteil für ein Fussball Team in Punkten Resultat, Tore, Gegentore,  Schüsse etc
+## Welchen Einfluss hat der Heimvorteil für ein Fussball Team?
+- Punkten
+- Resultat
+- Tore
+- Gegentore
+- Schüsse etc
 
-Bibliotheken importieren
+
 
 ```{r}
+# Bibliotheken importieren
 library("plotly")
+library("plyr")
+library("dplyr")
 ```
 
-Daten laden
-
-
-
 ```{r}
-library( plyr )
-
+# List files in Data folder
 files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
+print(files)
 
 # Create DataFrame with all csv
-df <- ldply( .data = files,
-                    .fun = read.csv,
-                    header = FALSE)
-
+df <- ldply( .data = files, .fun = read.csv)
 df
 ```
