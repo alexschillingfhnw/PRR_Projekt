@@ -11,7 +11,7 @@
 
 
 
-<title>Dataviz mit Plotly</title>
+<title>Dataviz mit Plotly PL Data</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1754,7 +1754,7 @@ pre code {
 
 
 
-<h1 class="title toc-ignore">Dataviz mit Plotly</h1>
+<h1 class="title toc-ignore">Dataviz mit Plotly PL Data</h1>
 
 </div>
 
@@ -1765,15 +1765,10 @@ pre code {
 denkt ihr?</h3>
 <p>…</p>
 </div>
-<div id="welchen-einfluss-hat-der-heimvorteil-für-ein-fussball-team" class="section level2">
-<h2>Welchen Einfluss hat der Heimvorteil für ein Fussball Team?</h2>
-<ul>
-<li>Punkten</li>
-<li>Resultat</li>
-<li>Tore</li>
-<li>Gegentore</li>
-<li>Schüsse etc</li>
-</ul>
+<div id="fragestellung-die-manschafft-die-zur-halbzeit-vorne-liegt-gewinnt-mit-einer-75-chance-auch-das-spiel.-falls-zur-halbzeit-unentschieden-ist-gewinnt-eher-das-heimteam." class="section level2">
+<h2>Fragestellung: “Die Manschafft, die zur Halbzeit vorne liegt,
+gewinnt mit einer 75% Chance auch das Spiel. Falls zur Halbzeit
+unentschieden ist, gewinnt eher das Heimteam.”</h2>
 <p>Dafür nehmen wir den Datacamp Datensatz <a href="https://app.datacamp.com/workspace/datasets/dataset-python-soccer">Soccer
 Data</a></p>
 <p>Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:</p>
@@ -1808,7 +1803,7 @@ View(df)</code></pre>
 <!-- rnb-chunk-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRhdGF2aXogbWl0IFBsb3RseSINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCiMjIyBFaW5mw7xocnVuZyBQcsOkc2VudGF0aW9uOiBIYWJlbiBGdXNzYmFsbCBUZWFtcyBlaW5lbiBIZWltdm9ydGVpbD8gV2FzIGRlbmt0IGlocj8NCi4uLg0KDQojIyBXZWxjaGVuIEVpbmZsdXNzIGhhdCBkZXIgSGVpbXZvcnRlaWwgZsO8ciBlaW4gRnVzc2JhbGwgVGVhbT8NCi0gUHVua3Rlbg0KLSBSZXN1bHRhdA0KLSBUb3JlDQotIEdlZ2VudG9yZQ0KLSBTY2jDvHNzZSBldGMNCg0KDQpEYWbDvHIgbmVobWVuIHdpciBkZW4gRGF0YWNhbXAgRGF0ZW5zYXR6IFtTb2NjZXIgRGF0YV0oaHR0cHM6Ly9hcHAuZGF0YWNhbXAuY29tL3dvcmtzcGFjZS9kYXRhc2V0cy9kYXRhc2V0LXB5dGhvbi1zb2NjZXIpDQoNCkFscyBFaW5mw7xocnVuZyB3ZXJkZW4gd2lyIGF1ZiBEYXRhY2FtcCBmb2xnZW5kZSBLdXJzZSBkdXJjaGdlaGVuOg0KDQotIFtJbnRlcmFjdGl2ZSBEYXRhIFZpc3VhbGl6YXRpb24gd2l0aCBwbG90bHldKGh0dHBzOi8vYXBwLmRhdGFjYW1wLmNvbS9sZWFybi9jb3Vyc2VzL2ludGVyYWN0aXZlLWRhdGEtdmlzdWFsaXphdGlvbi13aXRoLXBsb3RseS1pbi1yKQ0KDQotIFtJbnRlcm1lZGlhdGUgSW50ZXJhY3RpdmUgRGF0YSBWaXN1YWxpemF0aW9uIHdpdGggcGxvdGx5XShodHRwczovL2FwcC5kYXRhY2FtcC5jb20vbGVhcm4vY291cnNlcy9pbnRlcmFjdGl2ZS1kYXRhLXZpc3VhbGl6YXRpb24td2l0aC1wbG90bHktaW4tcikNCg0KYGBge3J9DQojIEJpYmxpb3RoZWtlbiBpbXBvcnRpZXJlbg0KbGlicmFyeSgicGxvdGx5IikNCmxpYnJhcnkoInBseXIiKQ0KbGlicmFyeSgiZHBseXIiKQ0KYGBgDQoNCmBgYHtyfQ0KIyBMaXN0IGZpbGVzIGluIERhdGEgZm9sZGVyDQpmaWxlcyA8LSBsaXN0LmZpbGVzKHBhdGg9Ii4vRGF0YS8iLCBwYXR0ZXJuPU5VTEwsIGFsbC5maWxlcz1GQUxTRSwgZnVsbC5uYW1lcz1UUlVFKQ0KDQojIENyZWF0ZSBEYXRhRnJhbWUgd2l0aCBhbGwgY3N2DQpkZiA8LSBsZHBseSguZGF0YSA9IGZpbGVzLCAuZnVuID0gcmVhZC5jc3YpDQoNCiMgVmlldyBlbnRpcmUgRGF0YUZyYW1lIGluIFIgU3R1ZGlvDQpWaWV3KGRmKQ0KYGBgDQo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiRGF0YXZpeiBtaXQgUGxvdGx5IFBMIERhdGEiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KCiMjIyBFaW5mw7xocnVuZyBQcsOkc2VudGF0aW9uOiBIYWJlbiBGdXNzYmFsbCBUZWFtcyBlaW5lbiBIZWltdm9ydGVpbD8gV2FzIGRlbmt0IGlocj8KLi4uCgojIyBGcmFnZXN0ZWxsdW5nOiAiRGllIE1hbnNjaGFmZnQsIGRpZSB6dXIgSGFsYnplaXQgdm9ybmUgbGllZ3QsIGdld2lubnQgbWl0IGVpbmVyIDc1JSBDaGFuY2UgYXVjaCBkYXMgU3BpZWwuIEZhbGxzIHp1ciBIYWxiemVpdCB1bmVudHNjaGllZGVuIGlzdCwgZ2V3aW5udCBlaGVyIGRhcyBIZWltdGVhbS4iCgoKRGFmw7xyIG5laG1lbiB3aXIgZGVuIERhdGFjYW1wIERhdGVuc2F0eiBbU29jY2VyIERhdGFdKGh0dHBzOi8vYXBwLmRhdGFjYW1wLmNvbS93b3Jrc3BhY2UvZGF0YXNldHMvZGF0YXNldC1weXRob24tc29jY2VyKQoKQWxzIEVpbmbDvGhydW5nIHdlcmRlbiB3aXIgYXVmIERhdGFjYW1wIGZvbGdlbmRlIEt1cnNlIGR1cmNoZ2VoZW46CgotIFtJbnRlcmFjdGl2ZSBEYXRhIFZpc3VhbGl6YXRpb24gd2l0aCBwbG90bHldKGh0dHBzOi8vYXBwLmRhdGFjYW1wLmNvbS9sZWFybi9jb3Vyc2VzL2ludGVyYWN0aXZlLWRhdGEtdmlzdWFsaXphdGlvbi13aXRoLXBsb3RseS1pbi1yKQoKLSBbSW50ZXJtZWRpYXRlIEludGVyYWN0aXZlIERhdGEgVmlzdWFsaXphdGlvbiB3aXRoIHBsb3RseV0oaHR0cHM6Ly9hcHAuZGF0YWNhbXAuY29tL2xlYXJuL2NvdXJzZXMvaW50ZXJhY3RpdmUtZGF0YS12aXN1YWxpemF0aW9uLXdpdGgtcGxvdGx5LWluLXIpCgpgYGB7cn0KIyBCaWJsaW90aGVrZW4gaW1wb3J0aWVyZW4KbGlicmFyeSgicGxvdGx5IikKbGlicmFyeSgicGx5ciIpCmxpYnJhcnkoImRwbHlyIikKYGBgCgpgYGB7cn0KIyBMaXN0IGZpbGVzIGluIERhdGEgZm9sZGVyCmZpbGVzIDwtIGxpc3QuZmlsZXMocGF0aD0iLi9EYXRhLyIsIHBhdHRlcm49TlVMTCwgYWxsLmZpbGVzPUZBTFNFLCBmdWxsLm5hbWVzPVRSVUUpCgojIENyZWF0ZSBEYXRhRnJhbWUgd2l0aCBhbGwgY3N2IGZyb20gMjAxNS0yMDE5CmRmIDwtIGxkcGx5KC5kYXRhID0gZmlsZXMsIC5mdW4gPSByZWFkLmNzdikKCiMgVmlldyBlbnRpcmUgRGF0YUZyYW1lIGluIFIgU3R1ZGlvClZpZXcoZGYpCmBgYAo=</div>
 
 
 

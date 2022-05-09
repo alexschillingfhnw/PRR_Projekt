@@ -1,17 +1,12 @@
 ---
-title: "Dataviz mit Plotly"
+title: "Dataviz mit Plotly PL Data"
 output: html_notebook
 ---
 
 ### Einführung Präsentation: Haben Fussball Teams einen Heimvorteil? Was denkt ihr?
 ...
 
-## Welchen Einfluss hat der Heimvorteil für ein Fussball Team?
-- Punkten
-- Resultat
-- Tore
-- Gegentore
-- Schüsse etc
+## Fragestellung: "Die Manschafft, die zur Halbzeit vorne liegt, gewinnt mit einer 75% Chance auch das Spiel. Falls zur Halbzeit unentschieden ist, gewinnt eher das Heimteam."
 
 
 Dafür nehmen wir den Datacamp Datensatz [Soccer Data](https://app.datacamp.com/workspace/datasets/dataset-python-soccer)
@@ -33,7 +28,7 @@ library("dplyr")
 # List files in Data folder
 files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
 
-# Create DataFrame with all csv
+# Create DataFrame with all csv from 2015-2019
 df <- ldply(.data = files, .fun = read.csv)
 
 # View entire DataFrame in R Studio
