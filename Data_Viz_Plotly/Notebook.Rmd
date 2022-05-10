@@ -37,5 +37,15 @@ files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TR
 df <- ldply(.data = files, .fun = read.csv)
 
 # View entire DataFrame in R Studio
-View(df)
+#View(df)
+
 ```
+```{r}
+group_by_referee <- aggregate(
+                    x = df$Referee,
+                    by = list(df$Referee),
+                    FUN = function(x) length(unique(x)))
+
+group_by_referee
+```
+

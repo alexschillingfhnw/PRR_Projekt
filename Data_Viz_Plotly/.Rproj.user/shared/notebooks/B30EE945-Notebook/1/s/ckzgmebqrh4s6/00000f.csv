@@ -1,8 +1,0 @@
-"0","# List files in Data folder"
-"0","files <- list.files(path=""./Data/"", pattern=NULL, all.files=FALSE, full.names=TRUE)"
-"0",""
-"0","# Create DataFrame with all csv"
-"0","df <- ldply(.data = files, .fun = read.csv)"
-"0",""
-"0","# View entire DataFrame in R Studio"
-"0","View(df)"
