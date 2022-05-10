@@ -3,7 +3,7 @@ title: "Dataviz mit Plotly PL Data"
 output: html_notebook
 ---
 
-## Fragestellung: "Die Manschafft, die zur Halbzeit vorne liegt, gewinnt mit einer 75% Chance auch das Spiel. Falls zur Halbzeit unentschieden ist, gewinnt eher das Heimteam."
+## Fragestellung: "Die Manschafft, die zur Halbzeit vorne liegt, gewinnt mit einer Chance von mindestens 75% auch das Spiel. Falls zur Halbzeit unentschieden ist, gewinnt eher das Heimteam."
 
 
 Dafür nehmen wir den Datacamp Datensatz [Soccer Data](https://app.datacamp.com/workspace/datasets/dataset-python-soccer)
@@ -72,7 +72,37 @@ df_count_results %>%
 
 ```
 ```{r}
-
+calc_prob <- function(df1, df2) {
+  win_prob <- 100 / nrow(df1) * nrow(df2)
+}
 ```
 
+```{r}
+df_halftime_home <- df %>% filter(HTR == "H")
+df_halftime_away <- df %>% filter(HTR == "A")
+df_halftime_draw <- df %>% filter(HTR == "D")
+
+df_fulltime_home_win <- df_halftime_home %>% filter(FTR == "H")
+df_fulltime_away_win <- df_halftime_away %>% filter(FTR == "A")
+df_fulltime_draw <- df_halftime_draw %>% filter(FTR == "D")
+
+# Heimteam führt zur Halbzeit und gewinnt das Spiel
+home_win_prob <- calc_prob(df_halftime_home, df_fulltime_home_win)
+print(home_win_prob)
+print(nrow(df_fulltime_home_win))
+
+# Auswärtsteam führt zur Halbzeit und gewinnt das Spiel
+away_win_prob <- calc_prob(df_halftime_away, df_fulltime_away_win)
+print(away_win_prob)
+print(nrow(df_fulltime_away_win))
+
+# Unentschieden zur Halbzeit und auch am Ende des Spiels
+draw_prob <- calc_prob(df_halftime_draw, df_fulltime_draw)
+print(draw_prob)
+print(nrow(df_fulltime_draw))
+
+```
+```{r}
+
+```
 
