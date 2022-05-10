@@ -3,9 +3,6 @@ title: "Dataviz mit Plotly PL Data"
 output: html_notebook
 ---
 
-### Einführung Präsentation: Haben Fussball Teams einen Heimvorteil? Was denkt ihr?
-...
-
 ## Fragestellung: "Die Manschafft, die zur Halbzeit vorne liegt, gewinnt mit einer 75% Chance auch das Spiel. Falls zur Halbzeit unentschieden ist, gewinnt eher das Heimteam."
 
 
@@ -35,12 +32,32 @@ df <- ldply(.data = files, .fun = read.csv)
 #View(df)
 
 ```
+
 ```{r}
 group_by_referee <- aggregate(
                     x = df$Referee,
                     by = list(df$Referee),
                     FUN = function(x) length(unique(x)))
-
-group_by_referee
 ```
 
+```{r}
+htr_table <- df %>%
+	count(HTR)
+
+ftr_table <- df %>%
+	count(FTR)
+
+Results = c("Away", "Draw", "Home")
+HT_count <- c(htr_table$n)
+FT_count <- c(ftr_table$n)
+
+df_results <- data.frame(Results, HT_count, FT_count)
+
+fig <- plot_ly(
+  df_results, x = ~Results, y = ~HT_count, type = 'bar', name = 'Half Time Score') %>% 
+  add_trace(y = ~FT_count, name = 'Full Time Score') %>%
+  layout(yaxis = list(title = 'Count'), barmode = 'group')
+
+fig
+
+```
