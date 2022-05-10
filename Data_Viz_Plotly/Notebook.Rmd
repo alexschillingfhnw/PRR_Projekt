@@ -17,6 +17,7 @@ Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
 ```{r}
 # Bibliotheken importieren
 library("plotly")
+library("dplyr")
 library("plyr")
 ```
 
