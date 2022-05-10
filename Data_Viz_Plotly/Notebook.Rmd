@@ -87,21 +87,26 @@ df_fulltime_home_win <- df_halftime_home %>% filter(FTR == "H")
 df_fulltime_away_win <- df_halftime_away %>% filter(FTR == "A")
 df_fulltime_draw <- df_halftime_draw %>% filter(FTR == "D")
 
-# Heimteam führt zur Halbzeit und gewinnt das Spiel
+df_fulltime_home_win_x <- df_halftime_draw %>% filter(FTR == "H")
+# Chance Heimteam führt zur Halbzeit und gewinnt das Spiel
 home_win_prob <- calc_prob(df_halftime_home, df_fulltime_home_win)
 print(home_win_prob)
 print(nrow(df_fulltime_home_win))
 
-# Auswärtsteam führt zur Halbzeit und gewinnt das Spiel
+# Chance Auswärtsteam führt zur Halbzeit und gewinnt das Spiel
 away_win_prob <- calc_prob(df_halftime_away, df_fulltime_away_win)
 print(away_win_prob)
 print(nrow(df_fulltime_away_win))
 
-# Unentschieden zur Halbzeit und auch am Ende des Spiels
+# Chance Unentschieden zur Halbzeit und auch am Ende des Spiels
 draw_prob <- calc_prob(df_halftime_draw, df_fulltime_draw)
 print(draw_prob)
 print(nrow(df_fulltime_draw))
 
+# Chance, Unentschieden zur Halbzeit und Heimteam gewinnt das Spiel
+homewin_after_htdraw_prob <- calc_prob(df_halftime_draw, df_fulltime_home_win_x)
+print(homewin_after_htdraw_prob)
+print(nrow(df_fulltime_home_win_x))
 ```
 ```{r}
 
