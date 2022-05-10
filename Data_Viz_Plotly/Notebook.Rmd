@@ -18,7 +18,6 @@ Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
 # Bibliotheken importieren
 library("plotly")
 library("plyr")
-library("dplyr")
 ```
 
 ```{r}
@@ -29,15 +28,8 @@ files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TR
 df <- ldply(.data = files, .fun = read.csv)
 
 # View entire DataFrame in R Studio
-#View(df)
+View(df)
 
-```
-
-```{r}
-group_by_referee <- aggregate(
-                    x = df$Referee,
-                    by = list(df$Referee),
-                    FUN = function(x) length(unique(x)))
 ```
 
 ```{r}
@@ -61,3 +53,26 @@ fig <- plot_ly(
 fig
 
 ```
+
+```{r}
+# HTR & FTR in einer Spalte zusammenfügen
+
+df$result <- paste(df$HTR, df$FTR)
+
+df_count_results <- df %>% 
+  group_by(result) %>% 
+  summarise(count_result = n() / nrow(df) * 100)
+
+df_count_results %>%
+  plot_ly(x = ~reorder(result, count_result), y = ~count_result) %>%
+  add_bars() %>%
+  layout(xaxis = list(categoryorder = "total descending", title = "Game Progress"),
+         yaxis = list(title = "Probability"),
+         title = "What is the probability of a game progress?")
+
+```
+```{r}
+
+```
+
+
