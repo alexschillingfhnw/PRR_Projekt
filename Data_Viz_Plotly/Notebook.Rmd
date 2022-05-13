@@ -17,97 +17,138 @@ Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
 ```{r}
 # Bibliotheken importieren
 library("plotly")
-library("dplyr")
 library("plyr")
+library("dplyr")
+library("forcats")
 ```
-
+## Daten einlesen und Dataframe erstellen
 ```{r}
-# List files in Data folder
+# List files in folder "Data"
 files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
 
-# Create DataFrame with all csv from 2015-2019
+# Create Dataframe with all csv from years 2015-2019
 df <- ldply(.data = files, .fun = read.csv)
-
-# View entire DataFrame in R Studio
-View(df)
-
 ```
 
 ```{r}
-htr_table <- df %>%
-	count(HTR)
+# Count frequency of haltime & fulltime results
+df_htr <- df %>% count(HTR)
+df_ftr <- df %>% count(FTR)
+```
 
-ftr_table <- df %>%
-	count(FTR)
+```{r}
+# Create dataframe with halttime & fulltime result amounts
+df_results <- data.frame(c("Away", "Draw", "Home"), c(df_htr$n), c(df_ftr$n))
 
-Results = c("Away", "Draw", "Home")
-HT_count <- c(htr_table$n)
-FT_count <- c(ftr_table$n)
+# Rename column headers
+col_headings <- c('Result','Halftime','Fulltime')
+names(df_results) <- col_headings
 
-df_results <- data.frame(Results, HT_count, FT_count)
-
+# Plot grouped bar chart to visualize halftime & fulltime results
 fig <- plot_ly(
-  df_results, x = ~Results, y = ~HT_count, type = 'bar', name = 'Half Time Score') %>% 
-  add_trace(y = ~FT_count, name = 'Full Time Score') %>%
+  df_results, x = ~Results, y = ~Halftime, type = 'bar', name = 'Half Time Score') %>% 
+  add_trace(y = ~Fulltime, name = 'Full Time Score') %>%
   layout(yaxis = list(title = 'Count'), barmode = 'group')
 
 fig
-
 ```
-
 ```{r}
-# HTR & FTR in einer Spalte zusammenfügen
-
+# merge HTR & FTR to 1 column
 df$result <- paste(df$HTR, df$FTR)
 
-df_count_results <- df %>% 
-  group_by(result) %>% 
-  summarise(count_result = n() / nrow(df) * 100)
+print("Example: H H = home team is winning at halftime and also wins the game at fulltime")
+```
 
-df_count_results %>%
-  plot_ly(x = ~reorder(result, count_result), y = ~count_result) %>%
+```{r}
+# Plot all different game progresses and their amount
+df %>%
+  count(result) %>%
+  mutate(result = fct_reorder(result, n, .desc = TRUE)) %>%
+  plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto') %>%
   add_bars() %>%
-  layout(xaxis = list(categoryorder = "total descending", title = "Game Progress"),
-         yaxis = list(title = "Probability"),
-         title = "What is the probability of a game progress?")
-
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Amount"),
+         title = "How are the different game progresses distributed?")
 ```
 ```{r}
+# Group by game outcome & calculate probability of all outcomes
+df_count_results <- df %>% 
+  group_by(result) %>% 
+  summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
+
+df_count_results %>%
+  mutate(result = fct_reorder(result, count_result, .desc = TRUE)) %>%
+  plot_ly(x = ~result, y = ~count_result, text = ~count_result, textposition = 'auto') %>%
+  add_bars() %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability %"),
+         title = "What is the probability of each game progress?")
+```
+
+
+
+```{r}
+# Calculate probability 
 calc_prob <- function(df1, df2) {
-  win_prob <- 100 / nrow(df1) * nrow(df2)
+  prob <- round((100 / nrow(df1) * nrow(df2)), digits = 2)
+  return(prob)
 }
 ```
 
 ```{r}
-df_halftime_home <- df %>% filter(HTR == "H")
-df_halftime_away <- df %>% filter(HTR == "A")
-df_halftime_draw <- df %>% filter(HTR == "D")
+# Filter home teams winning at halftime
+df_ht_home <- df %>% 
+  filter(HTR == "H")
 
-df_fulltime_home_win <- df_halftime_home %>% filter(FTR == "H")
-df_fulltime_away_win <- df_halftime_away %>% filter(FTR == "A")
-df_fulltime_draw <- df_halftime_draw %>% filter(FTR == "D")
+# Filter home teams winning at halftime & fulltime
+df_ft_home <- df_ht_home %>% 
+  filter(FTR == "H")
 
-df_fulltime_home_win_x <- df_halftime_draw %>% filter(FTR == "H")
-# Chance Heimteam führt zur Halbzeit und gewinnt das Spiel
-home_win_prob <- calc_prob(df_halftime_home, df_fulltime_home_win)
-print(home_win_prob)
-print(nrow(df_fulltime_home_win))
+home_win_prob <- calc_prob(df_ht_home, df_ft_home)
+cat("Probability that the home team wins the game if they are leading at half time: ", home_win_prob, "%")
 
-# Chance Auswärtsteam führt zur Halbzeit und gewinnt das Spiel
-away_win_prob <- calc_prob(df_halftime_away, df_fulltime_away_win)
-print(away_win_prob)
-print(nrow(df_fulltime_away_win))
-
-# Chance Unentschieden zur Halbzeit und auch am Ende des Spiels
-draw_prob <- calc_prob(df_halftime_draw, df_fulltime_draw)
-print(draw_prob)
-print(nrow(df_fulltime_draw))
-
-# Chance, Unentschieden zur Halbzeit und Heimteam gewinnt das Spiel
-homewin_after_htdraw_prob <- calc_prob(df_halftime_draw, df_fulltime_home_win_x)
-print(homewin_after_htdraw_prob)
-print(nrow(df_fulltime_home_win_x))
+#cat(nrow(df_ft_home))
 ```
+
+```{r}
+# Filter away teams winning at halftime
+df_ht_away <- df %>% 
+  filter(HTR == "A")
+
+# Filter away teams winning at halftime & fulltime
+df_ft_away <- df_ht_away %>% 
+  filter(FTR == "A")
+
+away_win_prob <- calc_prob(df_hf_away, df_ft_away)
+cat("Probability that the away team wins the game if they are leading at half time: ", away_win_prob, "%")
+```
+
+```{r}
+# Filter draw at halftime
+df_ht_draw <- df %>% 
+  filter(HTR == "D")
+
+# Filter draw at halftime & fulltime
+df_ft_draw <- df_ht_draw %>% 
+  filter(FTR == "D")
+
+draw_prob <- calc_prob(df_hf_draw, df_ft_draw)
+cat("Probability that the game ends in a draw if the halftime result is also a draw: ", away_win_prob, "%")
+```
+
+```{r}
+# Filter draw at halftime & the home team winning at fulltime
+df_ht_draw_ft_home_win <- df_ht_draw %>%
+  filter(FTR == "H")
+
+home_win_after_ht_draw_prob <- calc_prob(df_hf_draw, df_ht_draw_ft_home_win)
+cat("Probability that the home team wins if the halftime result is a draw: ", home_win_after_ht_draw_prob, "%")
+```
+
+```{r}
+
+```
+
 ```{r}
 
 ```
