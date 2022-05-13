@@ -20,6 +20,7 @@ library("plotly")
 library("plyr")
 library("dplyr")
 library("forcats")
+library("RColorBrewer")
 ```
 ## Daten einlesen und Dataframe erstellen
 ```{r}
@@ -28,6 +29,8 @@ files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TR
 
 # Create Dataframe with all csv from years 2015-2019
 df <- ldply(.data = files, .fun = read.csv)
+
+View(df)
 ```
 
 ```{r}
@@ -77,15 +80,12 @@ df_count_results <- df %>%
   summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
 
 df_count_results %>%
-  mutate(result = fct_reorder(result, count_result, .desc = TRUE)) %>%
-  plot_ly(x = ~result, y = ~count_result, text = ~count_result, textposition = 'auto') %>%
-  add_bars() %>%
+  plot_ly(labels = ~result, values = ~count_result) %>%
+  add_pie(hole = 0.4, color = I("white")) %>%
   layout(xaxis = list(title = "Game Progress"),
          yaxis = list(title = "Probability %"),
          title = "What is the probability of each game progress?")
 ```
-
-
 
 ```{r}
 # Calculate probability 
@@ -105,9 +105,8 @@ df_ft_home <- df_ht_home %>%
   filter(FTR == "H")
 
 home_win_prob <- calc_prob(df_ht_home, df_ft_home)
-cat("Probability that the home team wins the game if they are leading at half time: ", home_win_prob, "%")
 
-#cat(nrow(df_ft_home))
+cat("Probability that the home team wins the game if they are leading at half time: ", home_win_prob, "%")
 ```
 
 ```{r}
@@ -120,6 +119,7 @@ df_ft_away <- df_ht_away %>%
   filter(FTR == "A")
 
 away_win_prob <- calc_prob(df_hf_away, df_ft_away)
+
 cat("Probability that the away team wins the game if they are leading at half time: ", away_win_prob, "%")
 ```
 
@@ -132,8 +132,9 @@ df_ht_draw <- df %>%
 df_ft_draw <- df_ht_draw %>% 
   filter(FTR == "D")
 
-draw_prob <- calc_prob(df_hf_draw, df_ft_draw)
-cat("Probability that the game ends in a draw if the halftime result is also a draw: ", away_win_prob, "%")
+draw_prob <- calc_prob(df_ht_draw, df_ft_draw)
+
+cat("Probability that the game ends in a draw if the halftime result is also a draw: ", draw_prob, "%")
 ```
 
 ```{r}
@@ -142,11 +143,15 @@ df_ht_draw_ft_home_win <- df_ht_draw %>%
   filter(FTR == "H")
 
 home_win_after_ht_draw_prob <- calc_prob(df_hf_draw, df_ht_draw_ft_home_win)
+
 cat("Probability that the home team wins if the halftime result is a draw: ", home_win_after_ht_draw_prob, "%")
 ```
 
 ```{r}
+# Probability that the team winning at half time wins the game
+ht_ft_win_prob <- round(((home_win_prob * nrow(df_ft_home)) + (away_win_prob * nrow(df_ft_away))) / (nrow(df_ft_home) + nrow(df_ft_away)), digits = 2)
 
+cat("Probability that the team leading at half time wins the entire game: ", ht_ft_win_prob, "%")
 ```
 
 ```{r}
