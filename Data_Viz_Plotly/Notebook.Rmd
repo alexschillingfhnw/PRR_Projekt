@@ -118,7 +118,7 @@ df_ht_away <- df %>%
 df_ft_away <- df_ht_away %>% 
   filter(FTR == "A")
 
-away_win_prob <- calc_prob(df_hf_away, df_ft_away)
+away_win_prob <- calc_prob(df_ht_away, df_ft_away)
 
 cat("Probability that the away team wins the game if they are leading at half time: ", away_win_prob, "%")
 ```
@@ -142,7 +142,7 @@ cat("Probability that the game ends in a draw if the halftime result is also a d
 df_ht_draw_ft_home_win <- df_ht_draw %>%
   filter(FTR == "H")
 
-home_win_after_ht_draw_prob <- calc_prob(df_hf_draw, df_ht_draw_ft_home_win)
+home_win_after_ht_draw_prob <- calc_prob(df_ht_draw, df_ht_draw_ft_home_win)
 
 cat("Probability that the home team wins if the halftime result is a draw: ", home_win_after_ht_draw_prob, "%")
 ```
