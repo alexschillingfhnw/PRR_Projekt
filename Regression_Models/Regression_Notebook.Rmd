@@ -21,6 +21,7 @@ Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
 ```{r}
 # Bibliotheken importieren
 library("plotly")
+library("ggplot2")
 library("plyr")
 library("dplyr")
 library("forcats")
@@ -35,3 +36,11 @@ df = read.csv("./data/video_games_data.csv")
 
 View(df)
 ```
+### Erste Plots erstellen
+```{r}
+ggplot(df, aes(EU_Sales, JP_Sales))+
+         geom_point() +
+         geom_smooth(method = "lm", se = FALSE)
+
+```
+
