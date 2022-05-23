@@ -1,0 +1,37 @@
+---
+title: "Regression models with R"
+output: html_notebook
+---
+
+
+
+Das Ziel ist es, aus dem Datacamp Datensatz [Video Game Sales Date] (https://app.datacamp.com/workspace/datasets/dataset-python-video-games-sales), , folgende Fragestellung / Hypothese zu beantworten:
+
+
+### Fragestellung: "Ist es wahrscheinlicher, dass sich bestimmte Spielgenres in Europa signifikant (Unterschied von 50%) besser verkaufen lassen als im Japanischen und Nordamerikanischen Markt?"
+
+
+Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
+
+- [Introduction to Regression in R](https://app.datacamp.com/learn/courses/introduction-to-regression-in-r)
+
+- [Intermediate Regression in R](https://app.datacamp.com/learn/courses/intermediate-regression-in-r)
+
+
+```{r}
+# Bibliotheken importieren
+library("plotly")
+library("plyr")
+library("dplyr")
+library("forcats")
+```
+
+### Daten einlesen und Dataframe erstellen
+
+```{r}
+# List files in folder "Data"
+df = read.csv("./data/video_games_data.csv")
+
+
+View(df)
+```
