@@ -19,28 +19,91 @@ Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
 
 
 ```{r}
-# Bibliotheken importieren
+# Import libraries
 library("plotly")
 library("ggplot2")
 library("plyr")
 library("dplyr")
-library("forcats")
 ```
 
 ### Daten einlesen und Dataframe erstellen
 
 ```{r}
-# List files in folder "Data"
+# Read csv from folder "data"
 df = read.csv("./data/video_games_data.csv")
 
-
-View(df)
+head(df, 10)
 ```
-### Erste Plots erstellen
+### Data Wrangling
+Bevor wir mit den Visualisierungen und Modelle beginnen können, müssen wir die Daten säubern. Das heisst es sollte keine Duplikate geben, fehlende Werte sollten korrekt eingetragen werden.
+
+Es hat "N/A" Werte in den Spalten "Year" und "Publisher". Diese Werte sollten korrekte "NA" Werte sein, damit sie bei den Visualisierungen und Berechnungen nicht berücksichtigt werden.
+
 ```{r}
-ggplot(df, aes(EU_Sales, JP_Sales))+
-         geom_point() +
-         geom_smooth(method = "lm", se = FALSE)
+# Show rows with "N/A" values
+df[grep("N/A", df$Publisher),]
+df[grep("N/A", df$Year),]
+```
+
+```{r}
+# Replace "N/A" with "NA"
+df[df == "N/A"] <- NA
+```
+
+```{r}
+# Check if values have been converted
+df %>% 
+  summarize(across(everything(), ~sum(is.na(.))))
+```
+
+```{r}
+# Set data to correct type
+df$Genre <- as.factor(df$Genre)
+df$Year <- as.numeric(df$Year)
+```
+
+### Erste Plots erstellen
+
+```{r}
+# group by genre and summarize game sales to each region
+df_genre <- df %>%
+  group_by(Genre) %>%
+  summarize(
+    sum_NA = sum(NA_Sales),
+    sum_EU = sum(EU_Sales), 
+    sum_JP = sum(JP_Sales),
+    sum_other = sum(Other_Sales),
+    sum_global = sum(Global_Sales)
+  )
+
+fig <- plot_ly(
+  df_genre, y = ~Genre, x = ~sum_NA, type = "bar", name = "North America", width = 1000, height = 800) %>% 
+  add_trace(x = ~sum_EU, name = "Europe") %>%
+  add_trace(x = ~sum_JP, name = "Japan") %>%
+  add_trace(x = ~sum_other, name = "Other") %>%
+  layout(
+    title = "Video Game Sales by Genre",
+    xaxis = list(title = "Sales (million)"),
+    barmode = "group"
+  )
+
+fig
+```
+
+```{r}
+df_year_genre <- df %>%
+  group_by(Year, Genre) %>%
+  summarize(
+    sum_NA = sum(NA_Sales),
+    sum_EU = sum(EU_Sales), 
+    sum_JP = sum(JP_Sales),
+    sum_other = sum(Other_Sales),
+    sum_global = sum(Global_Sales)
+  )
+
+df_year_genre
+```
+```{r}
 
 ```
 

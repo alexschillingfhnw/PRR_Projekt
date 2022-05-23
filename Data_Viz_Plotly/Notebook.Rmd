@@ -1,0 +1,208 @@
+---
+title: "Data Visualization mit Plotly"
+output: html_notebook
+---
+
+Das Ziel ist es, aus dem Datacamp Datensatz [Soccer Data](https://app.datacamp.com/workspace/datasets/dataset-python-soccer), welcher Daten aus der höchsten englischen Fussballdivision beinhaltet, folgende Fragestellung / Hypothese zu beantworten:
+
+
+### Die Manschaft, die zur Halbzeit vorne liegt, gewinnt mit einer Chance von mindestens 75% das Spiel. Falls zur Halbzeit unentschieden ist, gewinnt eher das Heimteam mit einer Chance von mindestens 33.4%.
+
+
+Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
+
+- [Interactive Data Visualization with plotly](https://app.datacamp.com/learn/courses/interactive-data-visualization-with-plotly-in-r)
+
+- [Intermediate Interactive Data Visualization with plotly](https://app.datacamp.com/learn/courses/interactive-data-visualization-with-plotly-in-r)
+
+
+```{r}
+# Bibliotheken importieren
+library("plotly")
+library("plyr")
+library("dplyr")
+library("forcats")
+library("RColorBrewer")
+```
+
+### Daten einlesen und Dataframe erstellen
+
+```{r}
+# List files in folder "Data"
+files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
+
+# Create Dataframe with all csv from years 2015-2019
+df <- ldply(.data = files, .fun = read.csv)
+
+#View(df)
+```
+
+Hier zählen wir, wie oft das Heim - und Auswärtsteam zur Halb - und Vollzeit gewinnen oder ob das Spiel unentschieden ist.
+
+- A = Auswärtsteam gewinnt
+
+- D = Unentschieden
+
+- H = Heimteam gewinnt
+
+```{r}
+# Create dataframe for halftime & fulltime results and count frequency 
+df_htr <- df %>% count(HTR)
+df_ftr <- df %>% count(FTR)
+
+# Halftime
+df_htr
+# Fulltime
+df_ftr
+```
+
+```{r}
+# Create dataframe with halftime & fulltime result frequency
+df_results <- data.frame(c("Away win", "Draw", "Home win"), c(df_htr$n), c(df_ftr$n))
+
+# Rename column headers
+col_headings <- c('Result','Halftime','Fulltime')
+names(df_results) <- col_headings
+
+df_results
+```
+```{r}
+# Plot grouped bar chart to visualize halftime & fulltime results
+fig <- plot_ly(
+  df_results, x = ~Result, y = ~Halftime, type = 'bar', name = 'Halftime Score') %>% 
+  add_trace(y = ~Fulltime, name = 'Fulltime Score') %>%
+  layout(yaxis = list(title = 'Amount'), 
+         barmode = 'group',
+         width = 600, height = 500)
+
+fig
+```
+
+
+```{r}
+# Merge HTR & FTR to new column 'result'
+df$result <- paste(df$HTR, df$FTR)
+
+# Example: H H = home team is winning at halftime and also wins the game at fulltime
+
+df[,"result", drop=FALSE]
+```
+
+```{r}
+# Plot all different game progresses and their amount
+df_count_results <- df %>%
+  count(result)
+  
+df_count_results %>%
+  mutate(result = fct_reorder(result, n, .desc = TRUE)) %>%
+  plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto') %>%
+  add_bars() %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Amount"),
+         title = "How are the different game progresses distributed?",
+         width = 800, height = 500)
+```
+Hier wollen wir herausfinden, wie wahrscheinlich die 9 möglichen Spielausgängen sind bevor das Spiel überhaupt beginnt.
+```{r}
+# Group by game outcome & calculate probability of all outcomes
+df_count_results_prob <- df %>% 
+  group_by(result) %>% 
+  summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
+
+# Plot all different game progresses and their probability
+df_count_results_prob %>%
+  mutate(result = fct_reorder(result, count_result, .desc = TRUE)) %>%
+  plot_ly(x = ~result, y = ~count_result, text = ~count_result, textposition = 'auto') %>%
+  add_bars() %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability of Game Progress (%)"),
+         title = "How are the different game progresses distributed?",
+         width = 800, height = 500)
+```
+
+```{r}
+# Group by game outcome & calculate probability of all outcomes
+df_count_results <- df %>% 
+  group_by(result) %>% 
+  summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
+
+df_count_results %>%
+  plot_ly(labels = ~result, values = ~count_result) %>%
+  add_pie(hole = 0.4, color = I("white")) %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability %"),
+         title = "What is the probability of each game progress?")
+```
+```{r}
+# Calculate probability between halftime & fulltime away / draw / home results
+calc_prob <- function(df1, df2) {
+  prob <- round((100 / nrow(df1) * nrow(df2)), digits = 2)
+  return(prob)
+}
+```
+
+```{r}
+# Filter home teams winning at halftime
+df_ht_home <- df %>% 
+  filter(HTR == "H")
+
+# Filter home teams winning at halftime & fulltime
+df_ft_home <- df_ht_home %>% 
+  filter(FTR == "H")
+
+home_win_prob <- calc_prob(df_ht_home, df_ft_home)
+
+cat("Probability that the home team wins the game if they are leading at half time: ", home_win_prob, "%")
+```
+
+```{r}
+# Filter away teams winning at halftime
+df_ht_away <- df %>% 
+  filter(HTR == "A")
+
+# Filter away teams winning at halftime & fulltime
+df_ft_away <- df_ht_away %>% 
+  filter(FTR == "A")
+
+away_win_prob <- calc_prob(df_ht_away, df_ft_away)
+
+cat("Probability that the away team wins the game if they are leading at half time: ", away_win_prob, "%")
+```
+
+```{r}
+# Filter draw at halftime
+df_ht_draw <- df %>% 
+  filter(HTR == "D")
+
+# Filter draw at halftime & fulltime
+df_ft_draw <- df_ht_draw %>% 
+  filter(FTR == "D")
+
+draw_prob <- calc_prob(df_ht_draw, df_ft_draw)
+
+cat("Probability that the game ends in a draw if the halftime result is also a draw: ", draw_prob, "%")
+```
+
+```{r}
+# Filter draw at halftime & the home team winning at fulltime
+df_ht_draw_ft_home_win <- df_ht_draw %>%
+  filter(FTR == "H")
+
+home_win_after_ht_draw_prob <- calc_prob(df_ht_draw, df_ht_draw_ft_home_win)
+
+cat("Probability that the home team wins if the halftime result is a draw: ", home_win_after_ht_draw_prob, "%")
+```
+### Bestätigung der Hypothese
+
+Somit können wir aus die 2 Wahrscheinlichkeiten "home_win_prob" und "away_win_prob" unsere Hypothese wie folgt bestätigen: 
+
+```{r}
+# Probability that the team winning at half time wins the game
+ht_ft_win_prob <- round(((home_win_prob * nrow(df_ft_home)) + (away_win_prob * nrow(df_ft_away))) / (nrow(df_ft_home) + nrow(df_ft_away)), digits = 2)
+
+cat("Probability that the team leading at half time wins the entire game: ", ht_ft_win_prob, "%")
+```
+
+```{r}
+
+```
