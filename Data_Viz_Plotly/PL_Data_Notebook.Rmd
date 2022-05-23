@@ -17,7 +17,7 @@ Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
 
 
 ```{r}
-# Bibliotheken importieren
+# Import libraries
 library("plotly")
 library("plyr")
 library("dplyr")
@@ -28,13 +28,13 @@ library("RColorBrewer")
 ### Daten einlesen und Dataframe erstellen
 
 ```{r}
-# List files in folder "Data"
-files <- list.files(path="./Data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
+# List files in folder "data"
+files <- list.files(path="./data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
 
 # Create Dataframe with all csv from years 2015-2019
 df <- ldply(.data = files, .fun = read.csv)
 
-#View(df)
+View(df)
 ```
 
 Hier zählen wir, wie oft das Heim - und Auswärtsteam zur Halb - und Vollzeit gewinnen oder ob das Spiel unentschieden ist.
@@ -98,11 +98,13 @@ df_count_results %>%
   plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto') %>%
   add_bars() %>%
   layout(xaxis = list(title = "Game Progress"),
-         yaxis = list(title = "Amount"),
+         yaxis = list(title = "Amount of Game Progresses"),
          title = "How are the different game progresses distributed?",
          width = 800, height = 500)
 ```
+
 Hier wollen wir herausfinden, wie wahrscheinlich die 9 möglichen Spielausgängen sind bevor das Spiel überhaupt beginnt.
+
 ```{r}
 # Group by game outcome & calculate probability of all outcomes
 df_count_results_prob <- df %>% 
@@ -154,7 +156,6 @@ home_win_prob <- calc_prob(df_ht_home, df_ft_home)
 
 cat("Probability that the home team wins the game if they are leading at half time: ", home_win_prob, "%")
 ```
-
 ```{r}
 # Filter away teams winning at halftime
 df_ht_away <- df %>% 
@@ -204,6 +205,57 @@ cat("Probability that the team leading at half time wins the entire game: ", ht_
 ```
 
 ```{r}
+fig <- plot_ly(
+  y = c("Home wins after leading at HT", "Away wins after leading at HT", "Draw at FT & HT"), 
+  x = c(home_win_prob, away_win_prob, draw_prob),
+  type = "bar"
+)
+
+fig <- fig %>% layout(title = "Game Progress Overview",
+         xaxis = list(title = "Probability"))
+
+fig
 
 ```
+### Fragestellung 2:
+### Das Heimteam schiesst mehr aufs Tor als das Auswärtsteam, aber welches Team ist effizienter?
+
+```{r}
+# Plot Fulltime Home Shots vs Home Goals 
+p1 <- df %>%
+  plot_ly(x = ~FTHG, y = ~HS, coloraxis = 'coloraxis') %>%
+  add_histogram2d(nbinsy = 40)
+
+# Plot Fulltime Away Shots vs Away Goals 
+p2 <- df %>%
+  plot_ly(x = ~FTAG, y = ~AS, coloraxis = 'coloraxis') %>%
+  add_histogram2d(nbinsy = 40)
+
+# Add both plots together to build subplot
+subplot(p1, p2, nrows = 1, shareX = FALSE, shareY = FALSE) %>%
+  layout(
+    title = "Goals vs Shots Overview",
+    xaxis = list(title = "Home Goals"),
+    xaxis2 = list(title = "Away Goals"),
+    yaxis = list(title = "Home Shots"),
+    yaxis2 = list(title = "Away Shots"),
+    coloraxis=list(colorscale='Jet')
+  )
+```
+Anhand des Plots oben ist gut zu sehen, dass das Heimteam eher 1-2 Tore schiesst und 9-16 Torschüsse aufweist. Beim Auswärtsteam siehts etwas anders aus; Sie schiessen eher 0-1 Tor und weisen 6-11 Torschüsse auf.
+
+```{r}
+df %>%
+  plot_ly(x = ~HS, y = ~AS, coloraxis = 'coloraxis') %>%
+  add_histogram2d(nbinsx = 70, nbinsy = 60) %>%
+  layout(coloraxis=list(colorscale='Jet'))
+```
+
+```{r}
+df %>%
+  plot_ly(x = ~FTHG, y = ~FTAG, coloraxis = "coloraxis") %>%
+  add_histogram2d(nbinsx = 10, nbinsy = 10) %>%
+  layout(coloraxis=list(colorscale='Jet'))
+```
+
 
