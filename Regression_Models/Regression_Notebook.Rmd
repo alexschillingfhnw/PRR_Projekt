@@ -3,8 +3,6 @@ title: "Regression models with R"
 output: html_notebook
 ---
 
-
-
 Das Ziel ist es, aus dem Datacamp Datensatz [Video Game Sales Date] (https://app.datacamp.com/workspace/datasets/dataset-python-video-games-sales), , folgende Fragestellung / Hypothese zu beantworten:
 
 
@@ -26,8 +24,6 @@ library("plyr")
 library("dplyr")
 ```
 
-### Daten einlesen und Dataframe erstellen
-
 ```{r}
 # Read csv from folder "data"
 df = read.csv("./data/video_games_data.csv")
@@ -35,7 +31,7 @@ df = read.csv("./data/video_games_data.csv")
 head(df, 10)
 ```
 ### Data Wrangling
-Bevor wir mit den Visualisierungen und Modelle beginnen können, müssen wir die Daten säubern. Das heisst es sollte keine Duplikate geben, fehlende Werte sollten korrekt eingetragen werden.
+Bevor wir mit den Visualisierungen und Modelle beginnen können, müssen wir die Daten säubern. Das heisst es sollte keine Duplikate geben, fehlende Werte sollten korrekt eingetragen werden und Daten, die nicht verwendet werden sollten gelöscht werden.
 
 Es hat "N/A" Werte in den Spalten "Year" und "Publisher". Diese Werte sollten korrekte "NA" Werte sein, damit sie bei den Visualisierungen und Berechnungen nicht berücksichtigt werden.
 
@@ -55,32 +51,66 @@ df[df == "N/A"] <- NA
 df %>% 
   summarize(across(everything(), ~sum(is.na(.))))
 ```
+Da 2017 nur 3 Einträge und 2020 nur 1 Eintrag beinhaltet, werden wir diese Jahren nicht berücksichtigen und aus dem Dataframe löschen, weil sie nicht vollständig sind und so könnten unsere Modelle ungenau werden.
+
+```{r}
+# Remove years 2017 and 2020 from dataset
+df_clean <- df[!(df$Year == "2017" | df$Year == "2020"),]
+View(df_clean)
+```
+
+```{r}
+# Remove columns: Rank, Game name, Platform, Global Sales because they are not needed for our thesis
+```
 
 ```{r}
 # Set data to correct type
-df$Genre <- as.factor(df$Genre)
-df$Year <- as.numeric(df$Year)
+df_clean$Genre <- as.factor(df_clean$Genre)
+df_clean$Year <- as.numeric(df_clean$Year)
 ```
 
 ### Erste Plots erstellen
 
 ```{r}
-# group by genre and summarize game sales to each region
-df_genre <- df %>%
-  group_by(Genre) %>%
-  summarize(
-    sum_NA = sum(NA_Sales),
-    sum_EU = sum(EU_Sales), 
-    sum_JP = sum(JP_Sales),
-    sum_other = sum(Other_Sales),
-    sum_global = sum(Global_Sales)
-  )
+na <- sum(df_clean[, 'NA_Sales'], na.rm = TRUE)
+eu <- sum(df_clean[, 'EU_Sales'], na.rm = TRUE)
+jp <- sum(df_clean[, 'JP_Sales'], na.rm = TRUE)
+o <- sum(df_clean[, 'Other_Sales'], na.rm = TRUE)
+g <- sum(df_clean[, 'Global_Sales'], na.rm = TRUE)
 
 fig <- plot_ly(
-  df_genre, y = ~Genre, x = ~sum_NA, type = "bar", name = "North America", width = 1000, height = 800) %>% 
-  add_trace(x = ~sum_EU, name = "Europe") %>%
-  add_trace(x = ~sum_JP, name = "Japan") %>%
-  add_trace(x = ~sum_other, name = "Other") %>%
+  y = c(na, eu, jp, o), 
+  x = c("North America", "Europe", "Japan", "Other"), 
+  type = 'bar',
+  width = 800
+)
+
+fig <- fig %>% layout(title = "Video Game Sales Overview",
+         xaxis = list(title = "Region"),
+         yaxis = list(title = "Sales (million)"))
+
+fig
+```
+
+```{r}
+# group by genre and summarize game sales to each region
+df_genre <- df_clean %>%
+  group_by(Genre) %>%
+  summarize(
+    NA_Sales_Sum = sum(NA_Sales),
+    EU_Sales_Sum = sum(EU_Sales), 
+    JP_Sales_Sum = sum(JP_Sales),
+    Other_Sales_Sum = sum(Other_Sales),
+    Global_Sales_Sum = sum(Global_Sales)
+  )
+
+df_genre
+
+fig <- plot_ly(
+  df_genre, y = ~Genre, x = ~NA_Sales_Sum, type = "bar", name = "North America", width = 1000, height = 800) %>% 
+  add_trace(x = ~EU_Sales_Sum, name = "Europe") %>%
+  add_trace(x = ~JP_Sales_Sum, name = "Japan") %>%
+  add_trace(x = ~Other_Sales_Sum, name = "Other") %>%
   layout(
     title = "Video Game Sales by Genre",
     xaxis = list(title = "Sales (million)"),
@@ -91,19 +121,51 @@ fig
 ```
 
 ```{r}
-df_year_genre <- df %>%
-  group_by(Year, Genre) %>%
+df_year <- df_clean %>%
+  group_by(Year) %>%
   summarize(
-    sum_NA = sum(NA_Sales),
-    sum_EU = sum(EU_Sales), 
-    sum_JP = sum(JP_Sales),
-    sum_other = sum(Other_Sales),
-    sum_global = sum(Global_Sales)
+    NA_Sales_Sum = sum(NA_Sales),
+    EU_Sales_Sum = sum(EU_Sales), 
+    JP_Sales_Sum = sum(JP_Sales),
+    Other_Sales_Sum = sum(Other_Sales),
+    Global_Sales_Sum = sum(Global_Sales)
   )
 
-df_year_genre
+fig <- plot_ly(
+  df_year, y = ~NA_Sales_Sum, x = ~Year, type = "bar", name = "North America", width = 900, height = 500) %>% 
+  add_trace(y = ~EU_Sales_Sum, name = "Europe") %>%
+  add_trace(y = ~JP_Sales_Sum, name = "Japan") %>%
+  add_trace(y = ~Other_Sales_Sum, name = "Other") %>%
+  layout(
+    title = "Video Game from Sales by Year",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "Sales (million)"),
+    barmode = "stack"
+  )
+
+fig
+```
+
+### Regressionsmodelle
+
+Da wir unsere Daten jetzt besser verstehen, können wir mit den Regressionsmodellen und mit der Beantwortung unserer Fragestellung beginnen.
+
+```{r}
+# calculate the average of sales of each genre from each region
+df_sales_avg <- df_clean %>%
+  group_by(Genre) %>%
+  summarise(
+    EU_Sales_Avg = mean(EU_Sales),
+    NA_Sales_Avg = mean(NA_Sales),
+    JP_Sales_Avg = mean(JP_Sales),
+    Other_Sales_Avg = mean(Other_Sales),
+    Global_Sales_Avg = mean(Global_Sales))
+
+df_sales_avg
 ```
 ```{r}
-
+# Normalize data? -> NA obviously has more sales (biggest market)
 ```
+
+
 
