@@ -245,6 +245,16 @@ subplot(p1, p2, nrows = 1, shareX = FALSE, shareY = FALSE) %>%
 Anhand des Plots oben ist gut zu sehen, dass das Heimteam eher 1-2 Tore schiesst und 9-16 Torschüsse aufweist. Beim Auswärtsteam siehts etwas anders aus; Sie schiessen eher 0-1 Tor und weisen 6-11 Torschüsse auf.
 
 ```{r}
+# Fit the regression model of Fulltime Away Goals on Away Shots
+m <- lm(FTAG ~ AS, data = df)
+
+# Create the scatterplot with smoother
+df %>%
+  plot_ly(x = ~AS, y = ~FTAG) %>%
+  add_markers(showlegend = FALSE) %>%
+  add_lines(y = ~fitted(m))
+```
+```{r}
 df %>%
   plot_ly(x = ~HS, y = ~AS, coloraxis = 'coloraxis') %>%
   add_histogram2d(nbinsx = 70, nbinsy = 60) %>%
@@ -252,10 +262,27 @@ df %>%
 ```
 
 ```{r}
-df %>%
-  plot_ly(x = ~FTHG, y = ~FTAG, coloraxis = "coloraxis") %>%
-  add_histogram2d(nbinsx = 10, nbinsy = 10) %>%
-  layout(coloraxis=list(colorscale='Jet'))
+df_efficiency <- df %>%
+  summarise(
+    "Home Goals per Shot" = round(sum(FTHG) / sum(HS),digits = 3),
+    "Home Goals per Shot on Target" = round(sum(FTHG) / sum(HST),digits = 3),
+    "Away Goals per Shot" = round(sum(FTAG) / sum(AS),digits = 3),
+    "Away Goals per Shot on Target" = round(sum(FTAG) / sum(AST),digits = 3)
+)
+# Transpose dataframe
+t_df_efficiency <- data.frame("Percent" = t(df_efficiency))
+```
+
+```{r}
+fig <- plot_ly(
+  y = c("Home Goals per Shot", "Home Goals per Shot on Target", "Away Goals per Shot", "Away Goals per Shot on Target"),
+  x = t_df_efficiency$Percent,
+  type = "bar"
+)
+
+fig <- fig %>% layout(title = "Team Efficiency",
+         xaxis = list(title = "Probability"))
+fig
 ```
 
 
