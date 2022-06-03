@@ -25,8 +25,6 @@ library("forcats")
 library("RColorBrewer")
 ```
 
-### Daten einlesen und Dataframe erstellen
-
 ```{r}
 # List files in folder "data"
 files <- list.files(path="./data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
@@ -34,16 +32,8 @@ files <- list.files(path="./data/", pattern=NULL, all.files=FALSE, full.names=TR
 # Create Dataframe with all csv from years 2015-2019
 df <- ldply(.data = files, .fun = read.csv)
 
-View(df)
+df
 ```
-
-Hier zählen wir, wie oft das Heim - und Auswärtsteam zur Halb - und Vollzeit gewinnen oder ob das Spiel unentschieden ist.
-
-- A = Auswärtsteam gewinnt
-
-- D = Unentschieden
-
-- H = Heimteam gewinnt
 
 ```{r}
 # Create dataframe for halftime & fulltime results and count frequency 
@@ -55,6 +45,14 @@ df_htr
 # Fulltime
 df_ftr
 ```
+
+Hier zählen wir, wie oft das Heim - und Auswärtsteam zur Halb - und Vollzeit gewinnen oder ob das Spiel unentschieden ist.
+
+- A = Auswärtsteam gewinnt
+
+- D = Unentschieden
+
+- H = Heimteam gewinnt
 
 ```{r}
 # Create dataframe with halftime & fulltime result frequency
@@ -71,15 +69,13 @@ In diesen beiden Dataframes sieht man deutlich, dass zur Halbzeit meistens ein U
 ```{r}
 # Plot grouped bar chart to visualize halftime & fulltime results
 fig <- plot_ly(
-  df_results, x = ~Result, y = ~Halftime, type = 'bar', name = 'Halftime Score') %>% 
+  df_results, x = ~Result, y = ~Halftime, type = 'bar', name = 'Halftime Score', width = 600, height = 500) %>% 
   add_trace(y = ~Fulltime, name = 'Fulltime Score') %>%
-  layout(yaxis = list(title = 'Amount'), 
-         barmode = 'group',
-         width = 600, height = 500)
+  layout(yaxis = list(title = 'Amount'), barmode = 'group')
 
 fig
 ```
-Die obige Erkenntnis, haben wir hier noch als Barchart dargestellt. Das Heimteam gewinnt also im Schnitt viel öfters, als das Auswärtsteam. 
+Die obige Erkenntnis haben wir hier noch als Barchart dargestellt. Das Heimteam gewinnt also im Schnitt viel öfters, als das Auswärtsteam. 
 
 ```{r}
 # Merge HTR & FTR to new column 'result'
@@ -89,8 +85,6 @@ df$result <- paste(df$HTR, df$FTR)
 
 df[,"result", drop=FALSE]
 ```
-
-
 ```{r}
 # Plot all different game progresses and their amount
 df_count_results <- df %>%
@@ -98,18 +92,16 @@ df_count_results <- df %>%
   
 df_count_results %>%
   mutate(result = fct_reorder(result, n, .desc = TRUE)) %>%
-  plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto') %>%
+  plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto', width = 800, height = 500) %>%
   add_bars() %>%
   layout(xaxis = list(title = "Game Progress"),
          yaxis = list(title = "Amount of Game Progresses"),
-         title = "How are the different game progresses distributed?",
-         width = 800, height = 500)
+         title = "How are the different game progresses distributed?")
 ```
-
-Hier wollten wir herausfinden, wie wahrscheinlich die 9 möglichen Spielausgängen sind bevor das Spiel überhaupt beginnt. Man sieht, dass der häufigste Spielverlauf das "HH" ist. Also, dass in den meisten Spielen das Heimteam zur Halbzeit führt und die Führung bis zum schluss halten kann. Das seltenste Resultat war, dass das Heimteam zur Pause geführt hat und das Spiel am Ende doch noch verlor. Das kam bei 1520 Speielen nur genau 27x vor. 
+Hier wollten wir herausfinden, wie wahrscheinlich die 9 möglichen Spielausgängen sind bevor das Spiel überhaupt beginnt. Man sieht, dass der häufigste Spielverlauf das "H H" ist. Also, dass in den meisten Spielen das Heimteam zur Halbzeit führt und die Führung bis zum Schluss halten kann. Das seltenste Resultat war, dass das Heimteam zur Pause geführt hat und das Spiel am Ende doch noch verlor. Das kam bei 1520 Speielen nur genau 27x vor. 
 
 ```{r}
-# Group by game outcome & calculate probability of all outcomes
+# Group by game outcome & calculate probability in percent of all outcomes
 df_count_results_prob <- df %>% 
   group_by(result) %>% 
   summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
@@ -117,22 +109,26 @@ df_count_results_prob <- df %>%
 # Plot all different game progresses and their probability
 df_count_results_prob %>%
   mutate(result = fct_reorder(result, count_result, .desc = TRUE)) %>%
-  plot_ly(x = ~result, y = ~count_result, text = ~count_result, textposition = 'auto') %>%
+  plot_ly(x = ~result, y = ~count_result, text = ~count_result, textposition = 'auto', width = 800, height = 500) %>%
   add_bars() %>%
   layout(xaxis = list(title = "Game Progress"),
          yaxis = list(title = "Probability of Game Progress (%)"),
-         title = "How are the different game progresses distributed?",
-         width = 800, height = 500)
+         title = "How are the different game progresses distributed?")
 ```
 Den selben Graphen wollten wir noch in Prozenten darstellen. 
 
 ```{r}
-# Group by game outcome & calculate probability of all outcomes
-df_count_results <- df %>% 
-  group_by(result) %>% 
-  summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
-
 df_count_results %>%
+  plot_ly(labels = ~result, values = ~n, textinfo = "text", text = ~n) %>%
+  add_pie(hole = 0.4, color = I("white")) %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability %"),
+         title = "How are the different game progresses distributed?")
+```
+Hier sind nochamls die gleichen Daten, anders dargestellt in einem Donutchart. Es ist interessant, wenn man einige Speilverläufe ausblendet.
+
+```{r}
+df_count_results_prob %>%
   plot_ly(labels = ~result, values = ~count_result) %>%
   add_pie(hole = 0.4, color = I("white")) %>%
   layout(xaxis = list(title = "Game Progress"),
@@ -212,17 +208,16 @@ cat("Wahrscheinlichkeit, dass das Team, welches zur Halbzeit führt, den Match g
 ```
 
 ```{r}
+# Plot Game Progress overview
 fig <- plot_ly(
   y = c("Home wins after leading at HT", "Away wins after leading at HT", "Draw at FT & HT"), 
   x = c(home_win_prob, away_win_prob, draw_prob),
   type = "bar"
 )
 
-#label title and axis
 fig <- fig %>% layout(title = "Game Progress Overview",
          xaxis = list(title = "Probability"))
 
-#print figure
 fig
 ```
 ### Fazit
@@ -296,6 +291,7 @@ df %>%
 Auf diesem Plot, kann man anhand der orangen Linie sehen, wievielen Tore man erwarten kann, bei einer gewissen Anzahl Schüsse des Auswertsteams. Zum Beispiel: Wenn das Auswertsteam 25 Schüsse abgiebt, kann man im Durchschnitt mit 2.385 Toren rechnen. 
 
 ```{r}
+# Plot 2d Histogram (Heatmap) with home shots vs away shots
 df %>%
   plot_ly(x = ~HS, y = ~AS, coloraxis = 'coloraxis') %>%
   add_histogram2d(nbinsx = 70, nbinsy = 60) %>%
@@ -326,10 +322,10 @@ fig <- plot_ly(
   x = t_df_efficiency$Percent,
   type = "bar"
 )
-# Name the title
+
 fig <- fig %>% layout(title = "Team Efficiency",
          xaxis = list(title = "Probability"))
-# Plot figure
+
 fig
 ```
 Anhand dieses Diagrams, kann man sehen, dass der zweite Teil unserer Hypothese, leider nicht stimmt. Das Heimteam ist im Durchschnitt effizienter als das Auswertsteam. Pro Schuss aufs Tor, kann das Heimteam mit 0.328 Toren rechnen. Das Auswertsteam kann pro Torschuss nur mit 0.312 Toren rechnen. 

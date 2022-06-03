@@ -9,9 +9,11 @@ Das Ziel ist es, aus dem Datacamp Datensatz [Video Game Sales Date](https://app.
 ### Fragestellung: "Ist es wahrscheinlicher, dass sich bestimmte Spielgenres in Europa signifikant (Unterschied von 50%) besser verkaufen lassen als im Japanischen und Nordamerikanischen Markt?"
 
 
-Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
+Als Einführung werden wir auf Datacamp folgender Kurs durchgehen:
 
 - [Introduction to Regression in R](https://app.datacamp.com/learn/courses/introduction-to-regression-in-r)
+
+Falls wir noch weitere Informationen über Regressionsmodelle brauchen, steht uns dieser Kurs zur Verfügung:
 
 - [Intermediate Regression in R](https://app.datacamp.com/learn/courses/intermediate-regression-in-r)
 
@@ -44,13 +46,13 @@ df[grep("N/A", df$Year),]
 ```
 
 ```{r}
-# Replace "N/A" with "NA"
+# Replace "N/A" with correct "NA" value
 df[df == "N/A"] <- NA
 
-df <- df %>%
-  filter(df$Global_Sales > 0.1)
-
-df
+# df <- df %>%
+#   filter(df$Global_Sales > 0.1)
+# 
+# df
 ```
 
 ```{r}
@@ -70,14 +72,13 @@ df_clean <- df_clean[,!(names(df_clean) %in% drop)]
 
 df_clean
 ```
-
 ```{r}
 # Set data to correct type
 df_clean$Genre <- as.factor(df_clean$Genre)
 df_clean$Year <- as.numeric(df_clean$Year)
 ```
 
-### Erste Plots erstellen
+### Datensatz verstehen
 
 Wir erstellen ein paar erste Plots um uns einen Überblick über die Daten zu verschaffen.
 
@@ -132,9 +133,10 @@ fig <- plot_ly(
 
 fig
 ```
-Hier sieht man gut, dass Japan im Vergleich zu den anderen Märkten viel mehr Role-Play und Strategie Spiele verkauft. Dafür werden in Japan aber viel weniger Shooter und Action Spiele als den anderen Regionen verkauft. 
+Hier sieht man gut, dass Japan im Vergleich zu den anderen Märkten viel mehr Role-Playing und Strategie Spiele verkauft. Dafür werden in Japan aber viel weniger Shooter und Action Spiele als den anderen Regionen verkauft. EU und NA aber ähnliche Trends.
 
 ```{r}
+# Create Dataframe to show total sales for each year
 df_year <- df_clean %>%
   group_by(Year) %>%
   summarize(
@@ -145,6 +147,7 @@ df_year <- df_clean %>%
     Global_Sales_Sum = sum(Global_Sales)
   )
 
+# Plot stacked barchart from the DataFrame above
 fig <- plot_ly(
   df_year, y = ~NA_Sales_Sum, x = ~Year, type = "bar", name = "North America", width = 900, height = 500) %>% 
   add_trace(y = ~EU_Sales_Sum, name = "Europe") %>%
@@ -159,10 +162,10 @@ fig <- plot_ly(
 
 fig
 ```
-Überraschenderweise, sieht man in diesem Diagramm, dass die Videospiel Verkäufe zwischen den Jahren 2005 und 2012 geboomt haben. Danach ist die Kurve wieder abgeflacht. Dies könnte unter anderem daran liegen, dass in dieser Zeit viele neue Konsolen auf den Markt gekommen sind, welche grosse Neuerungen mit sich brachten. Die Playstation 3, die Xbox 360 und die Nintendo Wii sind alle in 2005-2006 auf den Markt gekommen und haben den Spielemarkt anscheinend stark beeinflusst. 
+Überraschenderweise, sieht man in diesem Diagramm, dass die Videospiel Verkäufe zwischen den Jahren 2005 und 2012 geboomt haben. Danach ist die Kurve wieder abgeflacht. Dies könnte unter anderem daran liegen, dass in dieser Zeit viele neue Konsolen auf den Markt gekommen sind, welche grosse Neuerungen mit sich brachten, die nicht in diesem Datensatz sind (zb PS4). Die Playstation 3, die Xbox 360 und die Nintendo Wii sind alle in 2005-2006 auf den Markt gekommen und haben den Spielemarkt anscheinend stark beeinflusst. 
 
 ```{r}
-# Calculate the average of sales of each genre from each region
+# Create Dataframe and calculate the average of sales for each genre from each region
 df_sales_avg <- df_clean %>%
   group_by(Genre) %>%
   summarise(
@@ -182,16 +185,14 @@ Da wir unsere Daten jetzt besser verstehen, können wir mit den Regressionsmodel
 
 ### Kann man anhand der nordamerikanischen Verkäufe voraussagen, wie sich ein Genre im europäischen Markt verkaufen wird?
 
-Diese Frage könnte einer Firma dabei helfen zu entscheiden, wieviel Werbebudget diese in Europa ausgeben soll, nachdem ein Spiel in Amerika bereits auf den Markt gekommen ist. 
+Diese Frage könnte einer Firma dabei helfen, zu entscheiden, wieviel Werbebudget diese in Europa ausgeben soll, nachdem ein Spiel in Amerika bereits auf den Markt gekommen ist. 
 
 ### Daten optimieren
 
-In unserem Datensatz gibt es einige Ausreisser. Zum Beispiel gibt es Spiele, welche nur in einzelnen Regionen auf den Markt gekommen sind und die in anderen Ländern garnicht verkauft wurden. Diese Tatsache würde beim Erstellen der Modelle zu grossen Abweichungen und Ungenauigkeiten führen. Daher berücksichtigen wir nur die Games, welche über 1 Mio. Verkäufe haben.
+In unserem Datensatz gibt es einige Ausreisser. Zum Beispiel gibt es Spiele, welche nur in einzelnen Regionen auf den Markt gekommen sind und die in anderen Ländern gar nicht verkauft wurden. Diese Tatsache würde beim Erstellen der Modelle zu Abweichungen und Ungenauigkeiten führen. Daher berücksichtigen wir nur die Games, welche über 1 Mio. Verkäufe haben.
 
-Unten haben wir die Genres mit den besten Fits genommen, da bei den anderen Spielgenres der r-squared Wert unter 50% lag. Das bedeutet, dass es dort keinen Zusammenhang gibt, weshalb wir diese ebenfalls nicht beachten werden.
+Unten haben wir die Genres mit den besten Fits genommen, da bei den anderen Spielgenres der R-Squared Wert unter 50% lag. Das bedeutet, dass es dort keinen Zusammenhang gibt, weshalb wir diese ebenfalls nicht beachten werden.
 
-
-Wir erstellen das Dataframe mit allen Racing Games:
 ```{r}
 # Create DataFrame only with Racing games
 df_racing <- df_clean %>%
@@ -201,7 +202,7 @@ df_racing <- df_clean %>%
     EU_Sales > 1.00
   )
 
-#create scatterplot
+# Create scatterplot
 ggplot(df_racing, aes(x=EU_Sales, y=NA_Sales)) + 
   geom_point() + 
   geom_smooth(method = "lm", se=FALSE) +
@@ -215,11 +216,15 @@ mdl_racing <- lm(EU_Sales ~ NA_Sales, data = df_racing)
 mdl_racing %>%
   glance() %>%
   pull(r.squared)
+```
+R.Squared ist sozusagen die Genauigkeit des Modells. Dieses Modell von Racing Games in der EU und in NA liegt bei einer akzeptablen Wert von 86%
 
+```{r}
 # Predict EU Sales for a Racing Game based on NA Sales
 predict_racing <- tibble(NA_Sales = 5)
 predict(mdl_racing, predict_racing)
 ```
+#### Vorhersage
 Wenn ein Racing Game in Nord Amerika 5 Millionen Verkäufe aufweist, liegt die Verkaufs-Vorhersage für Europa bei rund 3.9 Millionen. In Amerika sind diese Spiele also beliebter als bei uns in Europa.
 
 ```{r}
@@ -231,7 +236,7 @@ df_role <- df_clean %>%
     EU_Sales > 1.00
   )
 
-#create scatterplot
+# Create scatterplot
 ggplot(df_role, aes(x=EU_Sales, y=NA_Sales)) + 
   geom_point() + 
   geom_smooth(method = "lm", se=FALSE) +
@@ -245,67 +250,14 @@ mdl_rp <- lm(EU_Sales ~ NA_Sales, data = df_role)
 mdl_rp %>%
   glance() %>%
   pull(r.squared)
+```
+Das Modell von Role-Playing Spiele in NA und EU beträgt auch ein akzeptabler Wert von 84%
 
+```{r}
 # Predict EU Sales for a Role-Playing Game based on NA Sales
 predict_rp <- tibble(NA_Sales = 5)
 predict(mdl_rp, predict_rp)
 ```
-```{r}
-# Create DataFrame only with Shooter games
-df_shooter <- df_clean %>%
-  filter(
-    Genre == "Shooter",
-    NA_Sales > 0.00,
-    EU_Sales > 0.00
-  )
-
-# Create DataFrame only with Shooter games without Duck Hunt
-df_shooter_no_duckhunt <- df_clean %>%
-  filter(
-    Genre == "Shooter",
-    NA_Sales > 0.00,
-    Name != "Duck Hunt",
-    EU_Sales > 0.00
-  )
-
-# Create subplots
-p1 <- ggplot(df_shooter, aes(x=EU_Sales, y=NA_Sales)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se=FALSE) +
-  labs(title = "Shooter Game Sales")
-
-p2 <- ggplot(df_shooter_no_duckhunt, aes(x=EU_Sales, y=NA_Sales)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se=FALSE) +
-  labs(title = "Shooter Game Sales no Duck Hunt")
-
-# Plot both plots side by side
-grid.arrange(p1, p2, ncol = 2)  
-```
-Dies ist ein Vergleich der nordamerikanischen und der europäischen Verkäufen von Shooter-Spielen. Auf dem linken Plot ist ein ganz gewaltiger Ausreisser zu sehen, ganz oben links im Bild. Das ist das Spiel "Duck Hunt". Wir haben mehr über dieses Spiel recherchiert und herausgefunden, dass dieses Spiel zum Release des Nintendo Entertainment System kurz NES herausgekommen ist. Beim Kauf einer NES gab es das Spiel meistens dazu. Zu dem Zeitpunkt, kam die NES aber erst in Amerika auf den Markt und noch nicht in Europa. Daher sieht man, dass die Verkäufe in Amerika fast bei 30 Mio. lag und in europa sogar weniger als 1 Mio. Einheiten. Im Plot rechts, haben wir diesen Ausreiser entfernt und wir sehen direkt ein viel genaueres Bild. 
-
-```{r}
-# Create linear model
-mdl_shooter <- lm(EU_Sales ~ NA_Sales, data = df_shooter)
-
-# Extract model score
-mdl_shooter %>%
-  glance() %>%
-  pull(r.squared)
-```
-```{r}
-# Create linear model
-mdl_shooter_no_duckhunt <- lm(EU_Sales ~ NA_Sales, data = df_shooter_no_duckhunt)
-
-# Extract model score
-mdl_shooter_no_duckhunt %>%
-  glance() %>%
-  pull(r.squared)
-```
-Wie wir hier anhand der R-Squared sehen, fitted das Modell viel besser ohne Duck Hunt. 
-
-Aber da das Modell auch ohne Duck Hunt nicht sehr gut ist, werden wir mit diesem Genre keine Vorhersagen durchführen. Diese währen zu ungenau und wir könnten nicht dahinter stehen.
-
 ```{r}
 # Create DataFrame only with Simulation games
 df_sim <- df_clean %>%
@@ -313,15 +265,14 @@ df_sim <- df_clean %>%
     Genre == "Simulation",
     NA_Sales > 1.00,
     EU_Sales > 1.00
-)
+  )
 
+# Create scatterplot
 ggplot(df_sim, aes(x=EU_Sales, y=NA_Sales)) + 
   geom_point() + 
   geom_smooth(method = "lm", se=FALSE) +
   labs(title = "Simulation Game Sales Overview")
 ```
-Auf diesem Plot gibt es wieder einen Punkt, der weit weg von den anderen ist. Dies ist jedoch in diesem Fall kein Ausreiser, da hier die Verkäufe von Nordamerika und Europa sehr ähnlich sind. Bei diesem extrem beliebten Spiel handelt es sich übrigens um den Hundesimulator "Nintendogs". ;-)
-
 ```{r}
 # Create linear model
 mdl_sim <- lm(EU_Sales ~ NA_Sales, data = df_sim)
@@ -330,12 +281,17 @@ mdl_sim <- lm(EU_Sales ~ NA_Sales, data = df_sim)
 mdl_sim %>%
   glance() %>%
   pull(r.squared)
+```
+Das Modell von Simulation Spiele in NA und EU beträgt auch ein genauer Wert von 92%
 
-# Predict EU Sales for a Simulation Game based on NA Sales
+```{r}
+# Predict EU Sales for a Sport Game based on NA Sales
 predict_sim <- tibble(NA_Sales = 5)
 predict(mdl_sim, predict_sim)
 ```
-Wenn ein Simulation Game in NA 5 Million Verkäufe aufweist, liegt die Vorhersage für EU bei 5.4 Millionen.
+
+#### Vorhersage
+Wenn ein Simulation Game in NA 5 Million Verkäufe aufweist, liegt die Vorhersage für EU bei 5.4 Millionen. Und Somit ist die Genre Simulation die erste, bei der die Vorhersagen der Verkäufe grösser sind als in Nord Amerika.
 
 ```{r}
 # Create DataFrame only with Sport games
@@ -346,6 +302,7 @@ df_sport <- df_clean %>%
     EU_Sales > 1.00
   )
 
+# Create scatterplot
 ggplot(df_sport, aes(x=EU_Sales, y=NA_Sales)) + 
   geom_point() + 
   geom_smooth(method = "lm", se=FALSE) +
@@ -361,11 +318,15 @@ mdl_sport <- lm(EU_Sales ~ NA_Sales, data = df_sport)
 mdl_sport %>%
   glance() %>%
   pull(r.squared)
+```
+Das Modell von Sport Spiele in NA und EU ist sehr genau bei knapp 95%. Dadurch sind die Vorhersagen ebenfalls sehr genau.
 
+```{r}
 # Predict EU Sales for a Sport Game based on NA Sales
 predict_sport <- tibble(NA_Sales = 5)
 predict(mdl_sport, predict_sport)
 ```
+#### Vorhersage
 Wenn ein Sport Game in NA 5 Million Verkäufe aufweist, liegt die Vorhersage für EU bei 4 Millionen.
 
 
@@ -443,7 +404,6 @@ ggplot(df_sim, aes(x = mdl_sim$residuals)) +
   xlab("residuals")
 ```
 Mit Hilfe der roten Linie sieht man, dass das Histogramm  nicht 100% normalverteilt ist. Es kommt jedoch schon nahe an eie Normalverteilung heran, weshalb wir das so akzeptieren können.
-
 
 ```{r}
 # Create Residual Scatterplot
@@ -525,7 +485,6 @@ ggplot(df_publisher, aes(x=Global_Sales, y=Publisher)) +
 ```
 Wir können hier gut sehen, dass Nintendo viel erfolgreichere Spiele produziert hat. Dies deutet auch an, dass Nintendo beliebter ist als Electronic Arts. 
 
-
 ### Verkaufen sich in Japan Nintendo Wii Spiele besser als Nintendo DS Spiele?
 
 Nun filtern wir zuerst unseren Dataframe nach Wii und nach DS Spielen.
@@ -562,7 +521,7 @@ ggplot(df_platform, aes(x=JP_Sales, y=Platform)) +
   labs(
     x = "Sales (million)",
     y = "1=Wii / 0=DS",
-    title = "Probability that a game is from Wii based on sales in Japan"
+    title = "Probability that a game is from Wii based on it's sales in Japan"
   )
 ```
 Anhand von diesem Plot kann man erkennen, dass ein Spiel, welches sich über 2 Mio. mal verkauft hat, eher über die Platform Wii verkauft wurde. Daraus könnte man deuten, dass die Nintendo Wii in Japan beliebter ist als der Nintendo DS.
@@ -575,4 +534,4 @@ Bei den meisten Genren ist es nicht möglich die Verkäufe in Europa anhand der 
 - Simulation / Simulationsspiele
 - Sport / Sportspiele
 
-Sehr interessant zu sehen war das Genre Simulation. Unser Modell, welches bei 92% Genauigkeit liegt sagt voraus, dass ein beliebiges Spiel in Europa besser verkauft wird als in Nord Amerika. Bei allen anderen Genren verkaufen sich die Spiele in Nord Amerika besser.
+Sehr interessant zu sehen war das Genre Simulation. Unser Modell, welches bei 92% Genauigkeit liegt sagt voraus, dass ein beliebiges Simulation Spiel in Europa besser verkauft wird als in Nord Amerika. Bei allen anderen Genren verkaufen sich die Spiele in Nord Amerika besser.
