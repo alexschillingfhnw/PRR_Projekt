@@ -125,6 +125,7 @@ df_count_results_prob %>%
          width = 800, height = 500)
 ```
 Den selben Graphen wollten wir noch in Prozenten darstellen. 
+
 ```{r}
 # Group by game outcome & calculate probability of all outcomes
 df_count_results <- df %>% 
@@ -138,6 +139,8 @@ df_count_results %>%
          yaxis = list(title = "Probability %"),
          title = "What is the probability of each game progress?")
 ```
+In diesem Donutchart sieht man die Verteilung nochmals anderst dargestellt. 
+
 ```{r}
 # Calculate probability between halftime & fulltime away / draw / home results
 calc_prob <- function(df1, df2) {
@@ -221,7 +224,6 @@ fig <- fig %>% layout(title = "Game Progress Overview",
 
 #print figure
 fig
-
 ```
 ### Fazit
 Wir konnten unsere Hypothese bestätigen. Das Team, welches zur Halbzeit vorne liegt, gewinnt zu 78.41%. Ebenfalls ist die Wahrscheinlichkeit, dass das Heimteam gewinnt, nach einem Unentschieden zur Halbzeit, 38.03%. Wir hätten diesen Wert etwas höher erwartet und sind über das Ergebnis überrascht. 
