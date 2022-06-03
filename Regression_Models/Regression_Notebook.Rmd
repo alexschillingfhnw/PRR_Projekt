@@ -22,6 +22,7 @@ library("plotly")
 library("ggplot2")
 library("plyr")
 library("dplyr")
+library("broom")
 ```
 
 ```{r}
@@ -44,6 +45,11 @@ df[grep("N/A", df$Year),]
 ```{r}
 # Replace "N/A" with "NA"
 df[df == "N/A"] <- NA
+
+df <- df %>%
+  filter(df$Global_Sales > 0.1)
+
+df
 ```
 
 ```{r}
@@ -91,6 +97,7 @@ fig <- fig %>% layout(title = "Video Game Sales Overview",
 
 fig
 ```
+Wir sehen, dass Nord Amerika der grösste Markt ist. 
 
 ```{r}
 # group by genre and summarize game sales to each region
@@ -104,8 +111,7 @@ df_genre <- df_clean %>%
     Global_Sales_Sum = sum(Global_Sales)
   )
 
-df_genre
-
+# Plot grouped bar chart video game sales by genre
 fig <- plot_ly(
   df_genre, y = ~Genre, x = ~NA_Sales_Sum, type = "bar", name = "North America", width = 1000, height = 800) %>% 
   add_trace(x = ~EU_Sales_Sum, name = "Europe") %>%
@@ -119,6 +125,7 @@ fig <- plot_ly(
 
 fig
 ```
+Japan hat viel mehr Role-Play, Strategie und viel weniger Shooter und Action als die anderen Regionen
 
 ```{r}
 df_year <- df_clean %>%
@@ -151,7 +158,7 @@ fig
 Da wir unsere Daten jetzt besser verstehen, können wir mit den Regressionsmodellen und mit der Beantwortung unserer Fragestellung beginnen.
 
 ```{r}
-# calculate the average of sales of each genre from each region
+# Calculate the average of sales of each genre from each region
 df_sales_avg <- df_clean %>%
   group_by(Genre) %>%
   summarise(
@@ -163,9 +170,106 @@ df_sales_avg <- df_clean %>%
 
 df_sales_avg
 ```
+Kann man anhand der nordamerikanischen Verkäufe 
+
 ```{r}
-# Normalize data? -> NA obviously has more sales (biggest market)
+# Create DataFrame only with Action games
+genre <- "Racing"
+
+dF_action <- df_clean %>%
+  filter(Genre == genre)
+
+ggplot(dF_action, aes(x=EU_Sales, y=NA_Sales)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se=FALSE) +
+  labs(title = genre)
 ```
 
+```{r}
+# Create linear model
+mdl_action <- lm(EU_Sales ~ NA_Sales, data = dF_action)
+
+# Extract model score
+mdl_action %>%
+  glance() %>%
+  pull(r.squared)
+```
+
+
+```{r}
+# Color the SPLOM of NA_Sales, EU_Sales, and JP_Sales by nintendo
+df_cleaner %>%
+  #mutate(nintendo = ifelse(Publisher == "Nintendo", "Nintendo", "Other")) %>%
+  plot_ly(color = ~Genre) %>% 
+  add_trace(
+    type = 'splom',                                   
+    dimensions = list(
+      list(label = 'N. America', values = ~NA_Sales),
+      list(label = 'Europe', values = ~EU_Sales),     
+      list(label = 'Japan', values = ~JP_Sales)       
+    )
+  )
+```
+
+
+
+```{r}
+df_cleaner <- df_clean %>%
+  filter(Global_Sales > 0.5)
+
+mdl_eu_global <- lm(EU_Sales ~ Global_Sales, data = df_cleaner)
+mdl_eu_global
+
+mdl_eu_global_trans <- lm(sqrt(EU_Sales) ~ sqrt(Global_Sales), data = df_cleaner)
+mdl_eu_global_trans
+```
+```{r}
+summary(mdl_eu_global)
+```
+
+```{r}
+mdl_eu_global %>%
+  glance() %>%
+  pull(sigma)
+```
+
+
+```{r}
+ggplot(df_sales_avg, aes(x=NA_Sales_Avg, y=Global_Sales_Avg)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se=FALSE) 
+```
+
+```{r}
+mdl_na_global <- lm(NA_Sales_Avg ~ Global_Sales_Avg, data = df_sales_avg)
+mdl_na_global
+
+na <- tibble(Global_Sales_Avg = 9)
+
+predict(mdl_na_global, na)
+```
+
+```{r}
+ggplot(df_sales_avg, aes(x=JP_Sales_Avg, y=Global_Sales_Avg)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se=FALSE)
+```
+
+```{r}
+mdl_jp_global <- lm(JP_Sales_Avg ~ Global_Sales_Avg, data = df_sales_avg)
+mdl_jp_global
+
+jp <- tibble(Global_Sales_Avg = 9)
+
+predict(mdl_jp_global, jp)
+```
+
+```{r}
+# Standardize
+
+#df_clean[7 : 10] <- as.data.frame(scale(df_clean[7 : 10]))
+
+#df_clean
+```
 
 
