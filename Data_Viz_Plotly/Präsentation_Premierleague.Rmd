@@ -25,8 +25,6 @@ files <- list.files(path="./data/", pattern=NULL, all.files=FALSE, full.names=TR
 
 # Create Dataframe with all csv from years 2015-2019
 df <- ldply(.data = files, .fun = read.csv)
-
-df
 ```
 
 ```{r}
@@ -34,16 +32,8 @@ df
 df_htr <- df %>% count(HTR)
 df_ftr <- df %>% count(FTR)
 
-# Halftime
-df_htr
-# Fulltime
-df_ftr
 ```
-- A = Auswärtsteam gewinnt
 
-- D = Unentschieden
-
-- H = Heimteam gewinnt
 
 ```{r}
 # Create dataframe with halftime & fulltime result frequency
@@ -73,19 +63,7 @@ df$result <- paste(df$HTR, df$FTR)
 
 df[,"result", drop=FALSE]
 ```
-```{r}
-# Plot all different game progresses and their amount
-df_count_results <- df %>%
-  count(result)
-  
-df_count_results %>%
-  mutate(result = fct_reorder(result, n, .desc = TRUE)) %>%
-  plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto', width = 800, height = 500) %>%
-  add_bars() %>%
-  layout(xaxis = list(title = "Game Progress"),
-         yaxis = list(title = "Amount of Game Progresses"),
-         title = "How are the different game progresses distributed?")
-```
+
 ```{r}
 # Group by game outcome & calculate probability in percent of all outcomes
 df_count_results_prob <- df %>% 
@@ -119,8 +97,6 @@ df_ht_home <- df %>%
 df_ft_home <- df_ht_home %>% 
   filter(FTR == "H")
 home_win_prob <- calc_prob(df_ht_home, df_ft_home)
-
-cat("Die Wahrscheinlichkeit, dass das Heimteam gewinnt, wenn sie zur Halbzeit vorne liegen, beträgt: ", home_win_prob, "%")
 ```
 ```{r}
 # Filter away teams winning at halftime
@@ -133,7 +109,6 @@ df_ft_away <- df_ht_away %>%
 
 away_win_prob <- calc_prob(df_ht_away, df_ft_away)
 
-cat("Die Wahrscheinlichkeit, dass das Auswertsteam gewinnt, wenn sie zur Halbzeit vorne liegen, beträgt: ", away_win_prob, "%")
 ```
 
 ```{r}
@@ -147,7 +122,6 @@ df_ft_draw <- df_ht_draw %>%
 
 draw_prob <- calc_prob(df_ht_draw, df_ft_draw)
 
-cat("Die Wahrscheinlichkeit, dass ein Spiel in einem Unentschieden endet, wenn schon zur Halbzeit unentschieden war, beträgt: ", draw_prob, "%")
 ```
 
 ```{r}
@@ -157,13 +131,8 @@ df_ht_draw_ft_home_win <- df_ht_draw %>%
 
 home_win_after_ht_draw_prob <- calc_prob(df_ht_draw, df_ht_draw_ft_home_win)
 
-cat("Die Wahrscheinlichkeit, dass das Heimteam gewinnt, wenn zur Halbzeit unentschieden war, beträgt: ", home_win_after_ht_draw_prob, "%")
 ```
 ### Bestätigung der Hypothese
-
-Nun wollen wir aber die Wahrscheinlichkeit wissen, dass das zur Halbzeit führende Team das Spiel gewinnt. Egal ob Heim - oder Auswärtsteam.
-
-Somit können wir aus den 2 Wahrscheinlichkeiten "home_win_prob" und "away_win_prob" unsere Hypothese wie folgt bestätigen: 
 
 ```{r}
 # Probability that the team winning at half time wins the game
@@ -186,7 +155,6 @@ fig <- fig %>% layout(title = "Game Progress Overview",
 fig
 ```
 ```{r}
-# def variables
 n_shots <- df %>% 
   summarise(
     Home = sum(HS),
@@ -196,28 +164,6 @@ n_shots <- df %>%
 n_shots
 ```
 
-```{r}
-# Plot Fulltime Home Shots vs Home Goals 
-p1 <- df %>%
-  plot_ly(x = ~FTHG, y = ~HS, coloraxis = 'coloraxis') %>%
-  add_histogram2d(nbinsy = 40)
-
-# Plot Fulltime Away Shots vs Away Goals 
-p2 <- df %>%
-  plot_ly(x = ~FTAG, y = ~AS, coloraxis = 'coloraxis') %>%
-  add_histogram2d(nbinsy = 40)
-
-# Add both plots together to build subplot
-subplot(p1, p2, nrows = 1, shareX = FALSE, shareY = FALSE) %>%
-  layout(
-    title = "Goals vs Shots Overview",
-    xaxis = list(title = "Home Goals"),
-    xaxis2 = list(title = "Away Goals"),
-    yaxis = list(title = "Home Shots"),
-    yaxis2 = list(title = "Away Shots"),
-    coloraxis=list(colorscale='Jet')
-  )
-```
 ```{r}
 # Fit the regression model of Fulltime Home Goals on Home Shots
 m <- lm(FTHG ~ HS, data = df)
@@ -229,17 +175,6 @@ df %>%
   add_lines(y = ~fitted(m)) %>%
   layout(title = "Expectet goals by home shots")
 ```
-```{r}
-# Fit the regression model of Fulltime Away Goals on Away Shots
-m <- lm(FTAG ~ AS, data = df)
-
-# Create the scatterplot with smoother
-df %>%
-  plot_ly(x = ~AS, y = ~FTAG) %>%
-  add_markers(showlegend = FALSE) %>%
-  add_lines(y = ~fitted(m)) %>%
-  layout(title = "Expectet goals by away shots")
-```
 
 ```{r}
 # Plot 2d Histogram (Heatmap) with home shots vs away shots
@@ -248,6 +183,7 @@ df %>%
   add_histogram2d(nbinsx = 70, nbinsy = 60) %>%
   layout(coloraxis=list(colorscale='Jet'))
 ```
+10 - 15 Schüsse für beide Teams
 ```{r}
 #calculate the efficiency of the teams.
 
