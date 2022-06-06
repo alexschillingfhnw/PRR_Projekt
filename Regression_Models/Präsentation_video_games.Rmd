@@ -188,7 +188,7 @@ ggplot(df_sport, aes(x=EU_Sales, y=NA_Sales)) +
   geom_smooth(method = "lm", se=FALSE) +
   labs(title = "Sport Game Sales Overview")
 ```
-Ausreiser = Wii Sports
+Ausreisser = Wii Sports
 
 ```{r}
 # Create linear model
