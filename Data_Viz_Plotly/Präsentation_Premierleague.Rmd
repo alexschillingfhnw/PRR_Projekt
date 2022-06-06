@@ -51,7 +51,8 @@ col_headings <- c('Result','Halftime','Fulltime')
 names(df_results) <- col_headings
 
 df_results
-``
+```
+
 ```{r}
 # Plot grouped bar chart to visualize halftime & fulltime results
 fig <- plot_ly(
@@ -96,24 +97,6 @@ df_count_results_prob %>%
   layout(xaxis = list(title = "Game Progress"),
          yaxis = list(title = "Probability of Game Progress (%)"),
          title = "How are the different game progresses distributed?")
-```
-
-```{r}
-df_count_results %>%
-  plot_ly(labels = ~result, values = ~n, textinfo = "text", text = ~n) %>%
-  add_pie(hole = 0.4, color = I("white")) %>%
-  layout(xaxis = list(title = "Game Progress"),
-         yaxis = list(title = "Probability %"),
-         title = "How are the different game progresses distributed?")
-```
-
-```{r}
-df_count_results_prob %>%
-  plot_ly(labels = ~result, values = ~count_result) %>%
-  add_pie(hole = 0.4, color = I("white")) %>%
-  layout(xaxis = list(title = "Game Progress"),
-         yaxis = list(title = "Probability %"),
-         title = "What is the probability of each game progress?")
 ```
 
 ```{r}
