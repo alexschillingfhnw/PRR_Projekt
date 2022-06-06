@@ -1,0 +1,335 @@
+---
+title: "Data Visualization mit Plotly"
+output: html_notebook
+---
+
+Das Ziel ist es, aus dem Datacamp Datensatz [Soccer Data](https://app.datacamp.com/workspace/datasets/dataset-python-soccer), welcher Daten aus der höchsten englischen Fussballdivision beinhaltet, folgende Fragestellung / Hypothese zu beantworten:
+
+
+### Die Manschaft, die zur Halbzeit vorne liegt, gewinnt mit einer Chance von mindestens 75% das Spiel. Falls zur Halbzeit unentschieden ist, gewinnt eher das Heimteam mit einer Chance von mindestens 33.4%.
+
+
+Als Einführung werden wir auf Datacamp folgende Kurse durchgehen:
+
+- [Interactive Data Visualization with plotly](https://app.datacamp.com/learn/courses/interactive-data-visualization-with-plotly-in-r)
+
+- [Intermediate Interactive Data Visualization with plotly](https://app.datacamp.com/learn/courses/interactive-data-visualization-with-plotly-in-r)
+
+
+```{r}
+# Import libraries
+library("plotly")
+library("plyr")
+library("dplyr")
+library("forcats")
+library("RColorBrewer")
+```
+
+```{r}
+# List files in folder "data"
+files <- list.files(path="./data/", pattern=NULL, all.files=FALSE, full.names=TRUE)
+
+# Create Dataframe with all csv from years 2015-2019
+df <- ldply(.data = files, .fun = read.csv)
+
+df
+```
+
+```{r}
+# Create dataframe for halftime & fulltime results and count frequency 
+df_htr <- df %>% count(HTR)
+df_ftr <- df %>% count(FTR)
+
+# Halftime
+df_htr
+# Fulltime
+df_ftr
+```
+
+Hier zählen wir, wie oft das Heim - und Auswärtsteam zur Halb - und Vollzeit gewinnen oder ob das Spiel unentschieden ist.
+
+- A = Auswärtsteam gewinnt
+
+- D = Unentschieden
+
+- H = Heimteam gewinnt
+
+```{r}
+# Create dataframe with halftime & fulltime result frequency
+df_results <- data.frame(c("Away win", "Draw", "Home win"), c(df_htr$n), c(df_ftr$n))
+
+# Rename column headers
+col_headings <- c('Result','Halftime','Fulltime')
+names(df_results) <- col_headings
+
+df_results
+```
+In diesen beiden Dataframes sieht man deutlich, dass zur Halbzeit meistens ein Unentschieden steht. Gegen Ende des Spiels, ist das Unentschieden aber das seltenste Resultat. Knapp 700 mal von insgesamt 1520 Spielen siegte am Ende das Heimteam. Dies entspricht rund 46%. Wir gehen davon aus, dass dies damit zu tun hat, dass beide Teams in der zweiten Halbzeit mehr riskieren, da sie lieber den Sieg forcieren und dabei eine Niederlage rauskommt, anstatt das Unentschieden über die Zeit zu bringen. 
+
+```{r}
+# Plot grouped bar chart to visualize halftime & fulltime results
+fig <- plot_ly(
+  df_results, x = ~Result, y = ~Halftime, type = 'bar', name = 'Halftime Score', width = 600, height = 500) %>% 
+  add_trace(y = ~Fulltime, name = 'Fulltime Score') %>%
+  layout(yaxis = list(title = 'Amount'), barmode = 'group')
+
+fig
+```
+Die obige Erkenntnis haben wir hier noch als Barchart dargestellt. Das Heimteam gewinnt also im Schnitt viel öfters, als das Auswärtsteam. 
+
+```{r}
+# Merge HTR & FTR to new column 'result'
+df$result <- paste(df$HTR, df$FTR)
+
+# Example: H H = home team is winning at halftime and also wins the game at fulltime
+
+df[,"result", drop=FALSE]
+```
+```{r}
+# Plot all different game progresses and their amount
+df_count_results <- df %>%
+  count(result)
+  
+df_count_results %>%
+  mutate(result = fct_reorder(result, n, .desc = TRUE)) %>%
+  plot_ly(x = ~result, y = ~n, text = ~n, textposition = 'auto', width = 800, height = 500) %>%
+  add_bars() %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Amount of Game Progresses"),
+         title = "How are the different game progresses distributed?")
+```
+Hier wollten wir herausfinden, wie wahrscheinlich die 9 möglichen Spielausgängen sind bevor das Spiel überhaupt beginnt. Man sieht, dass der häufigste Spielverlauf das "H H" ist. Also, dass in den meisten Spielen das Heimteam zur Halbzeit führt und die Führung bis zum Schluss halten kann. Das seltenste Resultat war, dass das Heimteam zur Pause geführt hat und das Spiel am Ende doch noch verlor. Das kam bei 1520 Speielen nur genau 27x vor. 
+
+```{r}
+# Group by game outcome & calculate probability in percent of all outcomes
+df_count_results_prob <- df %>% 
+  group_by(result) %>% 
+  summarise(count_result = round(n() / nrow(df) * 100, digits = 2))
+
+# Plot all different game progresses and their probability
+df_count_results_prob %>%
+  mutate(result = fct_reorder(result, count_result, .desc = TRUE)) %>%
+  plot_ly(x = ~result, y = ~count_result, text = ~count_result, textposition = 'auto', width = 800, height = 500) %>%
+  add_bars() %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability of Game Progress (%)"),
+         title = "How are the different game progresses distributed?")
+```
+Den selben Graphen wollten wir noch in Prozenten darstellen. 
+
+```{r}
+df_count_results %>%
+  plot_ly(labels = ~result, values = ~n, textinfo = "text", text = ~n) %>%
+  add_pie(hole = 0.4, color = I("white")) %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability %"),
+         title = "How are the different game progresses distributed?")
+```
+Hier sind nochamls die gleichen Daten, anders dargestellt in einem Donutchart. Es ist interessant, wenn man einige Speilverläufe ausblendet.
+
+```{r}
+df_count_results_prob %>%
+  plot_ly(labels = ~result, values = ~count_result) %>%
+  add_pie(hole = 0.4, color = I("white")) %>%
+  layout(xaxis = list(title = "Game Progress"),
+         yaxis = list(title = "Probability %"),
+         title = "What is the probability of each game progress?")
+```
+In diesem Donutchart sieht man die Verteilung nochmals anderst dargestellt. 
+
+```{r}
+# Calculate probability between halftime & fulltime away / draw / home results
+calc_prob <- function(df1, df2) {
+  prob <- round((100 / nrow(df1) * nrow(df2)), digits = 2)
+  return(prob)
+}
+```
+
+```{r}
+# Filter home teams winning at halftime
+df_ht_home <- df %>% 
+  filter(HTR == "H")
+
+# Filter home teams winning at halftime & fulltime
+df_ft_home <- df_ht_home %>% 
+  filter(FTR == "H")
+home_win_prob <- calc_prob(df_ht_home, df_ft_home)
+
+cat("Die Wahrscheinlichkeit, dass das Heimteam gewinnt, wenn sie zur Halbzeit vorne liegen, beträgt: ", home_win_prob, "%")
+```
+```{r}
+# Filter away teams winning at halftime
+df_ht_away <- df %>% 
+  filter(HTR == "A")
+
+# Filter away teams winning at halftime & fulltime
+df_ft_away <- df_ht_away %>% 
+  filter(FTR == "A")
+
+away_win_prob <- calc_prob(df_ht_away, df_ft_away)
+
+cat("Die Wahrscheinlichkeit, dass das Auswertsteam gewinnt, wenn sie zur Halbzeit vorne liegen, beträgt: ", away_win_prob, "%")
+```
+
+```{r}
+# Filter draw at halftime
+df_ht_draw <- df %>% 
+  filter(HTR == "D")
+
+# Filter draw at halftime & fulltime
+df_ft_draw <- df_ht_draw %>% 
+  filter(FTR == "D")
+
+draw_prob <- calc_prob(df_ht_draw, df_ft_draw)
+
+cat("Die Wahrscheinlichkeit, dass ein Spiel in einem Unentschieden endet, wenn schon zur Halbzeit unentschieden war, beträgt: ", draw_prob, "%")
+```
+
+```{r}
+# Filter draw at halftime & the home team winning at fulltime
+df_ht_draw_ft_home_win <- df_ht_draw %>%
+  filter(FTR == "H")
+
+home_win_after_ht_draw_prob <- calc_prob(df_ht_draw, df_ht_draw_ft_home_win)
+
+cat("Die Wahrscheinlichkeit, dass das Heimteam gewinnt, wenn zur Halbzeit unentschieden war, beträgt: ", home_win_after_ht_draw_prob, "%")
+```
+### Bestätigung der Hypothese
+
+Nun wollen wir aber die Wahrscheinlichkeit wissen, dass das zur Halbzeit führende Team das Spiel gewinnt. Egal ob Heim - oder Auswärtsteam.
+
+Somit können wir aus den 2 Wahrscheinlichkeiten "home_win_prob" und "away_win_prob" unsere Hypothese wie folgt bestätigen: 
+
+```{r}
+# Probability that the team winning at half time wins the game
+ht_ft_win_prob <- round(((home_win_prob * nrow(df_ft_home)) + (away_win_prob * nrow(df_ft_away))) / (nrow(df_ft_home) + nrow(df_ft_away)), digits = 2)
+
+cat("Wahrscheinlichkeit, dass das Team, welches zur Halbzeit führt, den Match gewinnt: ", ht_ft_win_prob, "%")
+```
+
+```{r}
+# Plot Game Progress overview
+fig <- plot_ly(
+  y = c("Home wins after leading at HT", "Away wins after leading at HT", "Draw at FT & HT"), 
+  x = c(home_win_prob, away_win_prob, draw_prob),
+  type = "bar"
+)
+
+fig <- fig %>% layout(title = "Game Progress Overview",
+         xaxis = list(title = "Probability"))
+
+fig
+```
+### Fazit
+Wir konnten unsere Hypothese bestätigen. Das Team, welches zur Halbzeit vorne liegt, gewinnt zu 78.41%. Ebenfalls ist die Wahrscheinlichkeit, dass das Heimteam gewinnt, nach einem Unentschieden zur Halbzeit, 38.03%. Wir hätten diesen Wert etwas höher erwartet und sind über das Ergebnis überrascht. 
+
+
+### 2. Hypothese:
+### Das Heimteam hat mehr Schüsse als das Auswärtsteam, aber das Auswertsteam ist effizienter.
+
+```{r}
+# def variables
+n_shots <- df %>% 
+  summarise(
+    Home = sum(HS),
+    Away = sum(AS)
+)
+
+n_shots
+```
+Der erste Teil der Hypothese ist somit bestätigt. Die Heimteams haben viel mehr schüsse aufs Tor. Im Durchschnitt sind es bei 1520 Spielen also 14.01 Schüsse des Heimteams und 11.21 Schüsse des Auswertsteams.
+
+
+```{r}
+# Plot Fulltime Home Shots vs Home Goals 
+p1 <- df %>%
+  plot_ly(x = ~FTHG, y = ~HS, coloraxis = 'coloraxis') %>%
+  add_histogram2d(nbinsy = 40)
+
+# Plot Fulltime Away Shots vs Away Goals 
+p2 <- df %>%
+  plot_ly(x = ~FTAG, y = ~AS, coloraxis = 'coloraxis') %>%
+  add_histogram2d(nbinsy = 40)
+
+# Add both plots together to build subplot
+subplot(p1, p2, nrows = 1, shareX = FALSE, shareY = FALSE) %>%
+  layout(
+    title = "Goals vs Shots Overview",
+    xaxis = list(title = "Home Goals"),
+    xaxis2 = list(title = "Away Goals"),
+    yaxis = list(title = "Home Shots"),
+    yaxis2 = list(title = "Away Shots"),
+    coloraxis=list(colorscale='Jet')
+  )
+```
+Anhand des Plots oben ist gut zu sehen, dass das Heimteam oftmals 1-2 Tore schiesst und 9-16 Torschüsse aufweist. Beim Auswärtsteam siehts etwas anders aus; Sie schiessen eher 0-1 Tor und weisen dabei 6-11 Torschüsse auf.
+
+```{r}
+# Fit the regression model of Fulltime Home Goals on Home Shots
+m <- lm(FTHG ~ HS, data = df)
+
+# Create the scatterplot with smoother
+df %>%
+  plot_ly(x = ~HS, y = ~FTHG) %>%
+  add_markers(showlegend = FALSE) %>%
+  add_lines(y = ~fitted(m)) %>%
+  layout(title = "Expectet goals by home shots")
+```
+Auf diesem Plot, kann man anhand der orangen Linie sehen, wievielen Tore man erwarten kann, bei einer gewissen Anzahl Schüsse des Heimteams. Zum Beispiel: Wenn das Heimteam 25 Schüsse abgiebt, kann man im Durchschnitt mit 2.310 Toren rechnen.
+
+```{r}
+# Fit the regression model of Fulltime Away Goals on Away Shots
+m <- lm(FTAG ~ AS, data = df)
+
+# Create the scatterplot with smoother
+df %>%
+  plot_ly(x = ~AS, y = ~FTAG) %>%
+  add_markers(showlegend = FALSE) %>%
+  add_lines(y = ~fitted(m)) %>%
+  layout(title = "Expectet goals by away shots")
+```
+Auf diesem Plot, kann man anhand der orangen Linie sehen, wievielen Tore man erwarten kann, bei einer gewissen Anzahl Schüsse des Auswertsteams. Zum Beispiel: Wenn das Auswertsteam 25 Schüsse abgiebt, kann man im Durchschnitt mit 2.385 Toren rechnen. 
+
+```{r}
+# Plot 2d Histogram (Heatmap) with home shots vs away shots
+df %>%
+  plot_ly(x = ~HS, y = ~AS, coloraxis = 'coloraxis') %>%
+  add_histogram2d(nbinsx = 70, nbinsy = 60) %>%
+  layout(coloraxis=list(colorscale='Jet'))
+```
+Anhand dieses Plots, sieht man die Verteilung der Schusshäufigkeit. In den allermeisten Spielen, geben beide Teams 10-15 Schüsse ab. Es gibt in seltenen Fällen aber auch Spiele, wo die Heimmanschaft viel, viel mehr Schüsse hat. Zb 1x hatte das Heimteam 37 Schüsse und das Auswertsteam NUR 3! Dieses Spiel war Liverpool : Everton im Jahr 2016 und Liverpool gewann 4:0. 
+```{r}
+#calculate the efficiency of the teams.
+
+df_efficiency <- df %>%
+  summarise(
+    "Home Goals per Shot" = round(sum(FTHG) / sum(HS),digits = 3),
+    "Home Goals per Shot on Target" = round(sum(FTHG) / sum(HST),digits = 3),
+    "Away Goals per Shot" = round(sum(FTAG) / sum(AS),digits = 3),
+    "Away Goals per Shot on Target" = round(sum(FTAG) / sum(AST),digits = 3)
+)
+```
+
+```{r}
+# Transpose dataframe
+t_df_efficiency <- data.frame("Percent" = t(df_efficiency))
+```
+
+```{r}
+# Plot the efficiency in a barchart.
+fig <- plot_ly(
+  y = c("Home Goals per Shot ", "Home Goals per Shot on Target ", "Away Goals per Shot ", "Away Goals per Shot on Target "),
+  x = t_df_efficiency$Percent,
+  type = "bar"
+)
+
+fig <- fig %>% layout(title = "Team Efficiency",
+         xaxis = list(title = "Probability"))
+
+fig
+```
+Anhand dieses Diagrams, kann man sehen, dass der zweite Teil unserer Hypothese, leider nicht stimmt. Das Heimteam ist im Durchschnitt effizienter als das Auswertsteam. Pro Schuss aufs Tor, kann das Heimteam mit 0.328 Toren rechnen. Das Auswertsteam kann pro Torschuss nur mit 0.312 Toren rechnen. 
+
+### Fazit
+Wir sind überrascht, dass das Heimteam etwas effizienter ist, als das Auswertsteam. Allerdings ist der Unterschied extrem knap. Was allerdings spannend zu beobachten ist, ist dass das Heimteam im Schnitt ca. 14 Schüsse hat und das Auswertsteam nur ca. 11. Achtet euch doch beim nächsten Fussballspiel darauf. Ihr könnt pro Spiel also mit ca. 25 Schüssen rechnen. Dabei ist es wahrscheinlich, dass das Heimteam das Spiel gewinnt, auch wenn zur Halbzeit noch ein Unentschieden steht. 
+
