@@ -3,8 +3,11 @@ title: "Regression models with R"
 output: html_notebook
 ---
 
-### Fragestellung: "Ist es wahrscheinlicher, dass sich bestimmte Spielgenres in Europa signifikant (Unterschied von 50%) besser verkaufen lassen als im Japanischen und Nordamerikanischen Markt?"
+![](https://media.wired.com/photos/603847ccf322ee1eea0074d1/4:3/w_1800,h_1350,c_limit/wired-games-coding-blackness.jpg)
 
+### Hypothese:
+
+### Ist es wahrscheinlicher, dass sich bestimmte Spielgenres in Europa signifikant (Unterschied von 50%) besser verkaufen lassen als im Japanischen und Nordamerikanischen Markt?
 
 ```{r}
 # Import libraries
