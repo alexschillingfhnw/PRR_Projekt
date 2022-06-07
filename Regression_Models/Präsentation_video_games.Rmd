@@ -7,7 +7,7 @@ output: html_notebook
 
 ### Hypothese:
 
-### Ist es wahrscheinlicher, dass sich bestimmte Spielgenres in Europa signifikant (Unterschied von 50%) besser verkaufen lassen als im Japanischen und Nordamerikanischen Markt?
+### Kann man anhand der nordamerikanischen Verkäufe voraussagen, wie sich ein Genre im europäischen Markt verkaufen wird?
 
 ```{r}
 # Import libraries
@@ -22,20 +22,10 @@ library("gridExtra")
 ```{r}
 # Read csv from folder "data"
 df = read.csv("./data/video_games_data.csv")
-```
 
-```{r}
 # Replace "N/A" with correct "NA" value
 df[df == "N/A"] <- NA
 
-# df <- df %>%
-#   filter(df$Global_Sales > 0.1)
-# 
-# df
-```
-
-
-```{r}
 # Remove years 2017 and 2020 from dataset
 df_clean <- df[!(df$Year == "2017" | df$Year == "2020"),]
 
@@ -48,7 +38,6 @@ df_clean <- df_clean[,!(names(df_clean) %in% drop)]
 df_clean$Genre <- as.factor(df_clean$Genre)
 df_clean$Year <- as.numeric(df_clean$Year)
 ```
-
 
 ```{r}
 na <- sum(df_clean[, 'NA_Sales'], na.rm = TRUE)
@@ -101,35 +90,6 @@ fig
 Japan verkauft protzentual viel mehr Rollenspiele und Strategiespiele.
 
 ```{r}
-# Create Dataframe to show total sales for each year
-df_year <- df_clean %>%
-  group_by(Year) %>%
-  summarize(
-    NA_Sales_Sum = sum(NA_Sales),
-    EU_Sales_Sum = sum(EU_Sales), 
-    JP_Sales_Sum = sum(JP_Sales),
-    Other_Sales_Sum = sum(Other_Sales),
-    Global_Sales_Sum = sum(Global_Sales)
-  )
-
-# Plot stacked barchart from the DataFrame above
-fig <- plot_ly(
-  df_year, y = ~NA_Sales_Sum, x = ~Year, type = "bar", name = "North America", width = 900, height = 500) %>% 
-  add_trace(y = ~EU_Sales_Sum, name = "Europe") %>%
-  add_trace(y = ~JP_Sales_Sum, name = "Japan") %>%
-  add_trace(y = ~Other_Sales_Sum, name = "Other") %>%
-  layout(
-    title = "Video Game from Sales by Year",
-    xaxis = list(title = "Year"),
-    yaxis = list(title = "Sales (million)"),
-    barmode = "stack"
-  )
-
-fig
-```
-Verkaufsboom zwischen 2005 und 2012. (PS3, Xbox, Wii)
-
-```{r}
 # Create Dataframe and calculate the average of sales for each genre from each region
 df_sales_avg <- df_clean %>%
   group_by(Genre) %>%
@@ -141,6 +101,7 @@ df_sales_avg <- df_clean %>%
     Global_Sales_Avg = mean(Global_Sales))
 ```
 
+### Regressionsmodelle
 
 ```{r}
 # Create DataFrame only with Simulation games
@@ -157,6 +118,7 @@ ggplot(df_sim, aes(x=EU_Sales, y=NA_Sales)) +
   geom_smooth(method = "lm", se=FALSE) +
   labs(title = "Simulation Game Sales Overview")
 ```
+
 ```{r}
 # Create linear model
 mdl_sim <- lm(EU_Sales ~ NA_Sales, data = df_sim)
@@ -240,7 +202,6 @@ ggplot(df_sim, aes(x = mdl_sim$residuals)) +
   ggtitle("Residuals Model Simulation Genre") +
   xlab("residuals")
 ```
-Nicht 100% Normalverteilt
 
 ```{r}
 # Create Residual Scatterplot
@@ -262,80 +223,5 @@ ggplot(df_sport, aes(x = mdl_sport$residuals)) +
   ggtitle("Residuals Model Sport Genre") +
   xlab("residuals")
 ```
-Nicht 100% Normalverteilt
 
-
-### Verkaufen sich Nintendo Spiele weltweit besser als Spiele Electronic Arts Spiele. 
-
-```{r}
-# Create DataFrame with only Nintendo and Sony as Publisher
-publishers = c("Nintendo", "Electronic Arts")
-
-df_publisher <- df_clean %>%
-  filter(
-    Publisher %in% publishers
-    )
-```
-
-```{r}
-# Replace publisher name with 0 and 1
-df_publisher$Publisher[df_publisher$Publisher == "Electronic Arts"] <- 0
-df_publisher$Publisher[df_publisher$Publisher == "Nintendo"] <- 1
-
-# Save as int
-df_publisher$Publisher <- as.numeric(df_publisher$Publisher)
-```
-
-```{r}
-# Create logistic model
-mdl_publisher <- glm(Publisher ~ NA_Sales, data = df_publisher, family = binomial())
-```
-
-```{r}
-ggplot(df_publisher, aes(x=Global_Sales, y=Publisher)) + 
-  geom_point(alpha=.5, color="Blue") +
-  stat_smooth(method="glm", col = "Red", se=FALSE, method.args = list(family=binomial)) +
-  labs(
-    x = "Sales (million)",
-    y = "1=Nintendo / 0=Electronic Arts",
-    title = "Probability that a game is from Nintendo based on global sales"
-  )
-```
-
-### Verkaufen sich in Japan Nintendo Wii Spiele besser als Nintendo DS Spiele?
-
-```{r}
-# Create DataFrame with only Wii and DS as Platforms
-platforms = c("Wii", "DS")
-
-df_platform <- df_clean %>%
-  filter(
-    Platform %in% platforms
-    )
-
-```
-```{r}
-# Replace platform name with 0 and 1
-df_platform$Platform[df_platform$Platform == "Wii"] <- 0
-df_platform$Platform[df_platform$Platform == "DS"] <- 1
-
-# Save as int
-df_platform$Platform <- as.numeric(df_platform$Platform)
-```
-
-```{r}
-# Create logistic model
-mdl_platform <- glm(Platform ~ JP_Sales, data = df_platform, family = binomial())
-```
-
-```{r}
-ggplot(df_platform, aes(x=JP_Sales, y=Platform)) + 
-  geom_point(alpha=.2, color="Blue") +
-  stat_smooth(method="glm", col = "Red", se=FALSE, method.args = list(family=binomial)) +
-  labs(
-    x = "Sales (million)",
-    y = "1=Wii / 0=DS",
-    title = "Probability that a game is from Wii based on it's sales in Japan"
-  )
-```
 ### Fragen?
